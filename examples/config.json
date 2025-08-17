@@ -1,0 +1,8 @@
+{
+  "freqtrade_path": "/path/to/freqtrade",
+  "default_exchange": "binance",
+  "default_stake_amount": 100.0,
+  "default_epochs": 100,
+  "coingecko_api_key": "your_api_key",
+  "log_level": "INFO"
+}
