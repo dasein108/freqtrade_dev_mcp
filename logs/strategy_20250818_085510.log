@@ -1,0 +1,208 @@
+[2025-08-18 08:55:10] INFO     
+  Logging initialized - Session: 20250818_085510
+[2025-08-18 08:55:10] INFO     
+  Human-readable log: logs/strategy_20250818_085510.log
+[2025-08-18 08:55:10] INFO     
+  Structured log: logs/strategy_20250818_085510.json
+[2025-08-18 08:55:10] INFO     
+  Logging initialized - Session: 20250818_085510
+[2025-08-18 08:55:10] INFO     
+  Human-readable log: logs/strategy_20250818_085510.log
+[2025-08-18 08:55:10] INFO     
+  Structured log: logs/strategy_20250818_085510.json
+[2025-08-18 08:55:10] INFO     
+  MCP client initialized with server at /Users/dasein/dev/freqtrade/freqtrade_mcp/run_server.py
+[2025-08-18 08:55:10] INFO     
+  Starting MCP server subprocess...
+[2025-08-18 08:55:12] INFO     
+  MCP client connected successfully
+[2025-08-18 08:55:12] INFO     
+  Available tools: ['download_candles', 'backtest_strategy', 'hyperopt_strategy', 'list_results', 'get_result', 'create_userdir', 'create_config', 'create_strategy', 'create_strategy_wireframe', 'extract_backtest_data', 'extract_hyperopt_data', 'search_results']
+[2025-08-18 08:55:12] INFO     
+  MCP connection validation successful
+[2025-08-18 08:55:12] INFO     
+  Stopping MCP client...
+[2025-08-18 08:55:12] INFO     
+  Starting strategy development workflow
+
+------------------------------------------------------------
+[2025-08-18 08:55:12] INFO     | PHASE: WORKFLOW INITIALIZATION 
+  📋 PHASE: WORKFLOW INITIALIZATION
+
+------------------------------------------------------------
+[2025-08-18 08:55:12] INFO     | PHASE: WORKFLOW INITIALIZATION | STEP: None 
+  ⏳ Starting strategy development for 2 symbols
+[2025-08-18 08:55:12] INFO     
+  Starting MCP server subprocess...
+[2025-08-18 08:55:14] INFO     
+  MCP client connected successfully
+[2025-08-18 08:55:14] INFO     
+  Available tools: ['download_candles', 'backtest_strategy', 'hyperopt_strategy', 'list_results', 'get_result', 'create_userdir', 'create_config', 'create_strategy', 'create_strategy_wireframe', 'extract_backtest_data', 'extract_hyperopt_data', 'search_results']
+[2025-08-18 08:55:14] INFO     
+  MCP client connected, starting workflow
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: WORKFLOW EXECUTION 
+  📋 PHASE: WORKFLOW EXECUTION
+[2025-08-18 08:55:14] INFO     
+  Starting market data fetch
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING 
+  📋 PHASE: DATA FETCHING
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  📍 STEP: Market Data Collection
+[2025-08-18 08:55:14] INFO     
+  Fetching BTC/USDT:USDT 1h
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  ⏳ Fetching BTC/USDT:USDT 1h [0/4] (0.0%)
+[2025-08-18 08:55:14] INFO     
+  Downloading BTC/USDT:USDT 1h from MCP
+[2025-08-18 08:55:14] INFO     
+  Fetching BTC/USDT:USDT 1h data for 365 days
+[2025-08-18 08:55:14] INFO     
+  Detected futures pairs, setting trading_mode=futures
+[2025-08-18 08:55:14] DEBUG    
+  Calling tool: download_candles with args: {'pairs': ['BTC/USDT:USDT'], 'timeframe': '1h', 'timerange': '20240818-20250818', 'exchange': 'binance', 'trading_mode': 'futures'}
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  MCP error: DownloadCandlesCommand.execute() missing 2 required positional arguments: 'timeframes' and 'date_range'
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:117 in fetch_candles_from_mcp
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  Failed to fetch BTC/USDT:USDT 1h
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:203 in fetch_market_data
+[2025-08-18 08:55:14] INFO     
+  Fetching BTC/USDT:USDT 4h
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  ⏳ Fetching BTC/USDT:USDT 4h [0/4] (0.0%)
+[2025-08-18 08:55:14] INFO     
+  Downloading BTC/USDT:USDT 4h from MCP
+[2025-08-18 08:55:14] INFO     
+  Fetching BTC/USDT:USDT 4h data for 365 days
+[2025-08-18 08:55:14] INFO     
+  Detected futures pairs, setting trading_mode=futures
+[2025-08-18 08:55:14] DEBUG    
+  Calling tool: download_candles with args: {'pairs': ['BTC/USDT:USDT'], 'timeframe': '4h', 'timerange': '20240818-20250818', 'exchange': 'binance', 'trading_mode': 'futures'}
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  MCP error: DownloadCandlesCommand.execute() missing 2 required positional arguments: 'timeframes' and 'date_range'
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:117 in fetch_candles_from_mcp
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  Failed to fetch BTC/USDT:USDT 4h
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:203 in fetch_market_data
+[2025-08-18 08:55:14] INFO     
+  Fetching ETH/USDT:USDT 1h
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  ⏳ Fetching ETH/USDT:USDT 1h [0/4] (0.0%)
+[2025-08-18 08:55:14] INFO     
+  Downloading ETH/USDT:USDT 1h from MCP
+[2025-08-18 08:55:14] INFO     
+  Fetching ETH/USDT:USDT 1h data for 365 days
+[2025-08-18 08:55:14] INFO     
+  Detected futures pairs, setting trading_mode=futures
+[2025-08-18 08:55:14] DEBUG    
+  Calling tool: download_candles with args: {'pairs': ['ETH/USDT:USDT'], 'timeframe': '1h', 'timerange': '20240818-20250818', 'exchange': 'binance', 'trading_mode': 'futures'}
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  MCP error: DownloadCandlesCommand.execute() missing 2 required positional arguments: 'timeframes' and 'date_range'
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:117 in fetch_candles_from_mcp
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  Failed to fetch ETH/USDT:USDT 1h
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:203 in fetch_market_data
+[2025-08-18 08:55:14] INFO     
+  Fetching ETH/USDT:USDT 4h
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  ⏳ Fetching ETH/USDT:USDT 4h [0/4] (0.0%)
+[2025-08-18 08:55:14] INFO     
+  Downloading ETH/USDT:USDT 4h from MCP
+[2025-08-18 08:55:14] INFO     
+  Fetching ETH/USDT:USDT 4h data for 365 days
+[2025-08-18 08:55:14] INFO     
+  Detected futures pairs, setting trading_mode=futures
+[2025-08-18 08:55:14] DEBUG    
+  Calling tool: download_candles with args: {'pairs': ['ETH/USDT:USDT'], 'timeframe': '4h', 'timerange': '20240818-20250818', 'exchange': 'binance', 'trading_mode': 'futures'}
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  MCP error: DownloadCandlesCommand.execute() missing 2 required positional arguments: 'timeframes' and 'date_range'
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:117 in fetch_candles_from_mcp
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  Failed to fetch ETH/USDT:USDT 4h
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:203 in fetch_market_data
+[2025-08-18 08:55:14] INFO     
+  Data fetch complete: 0 fetched, 0 from cache, 4 errors
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  ✨ SUCCESS: Data fetch completed
+  DATA:
+    - fetched: 0
+    - cached: 0
+    - errors: 4
+    - total_candles: 0
+
+================================================================================
+[2025-08-18 08:55:14] ERROR    
+  No candle data available, cannot continue
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:247 in fetch_market_data
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING | STEP: fetch_market_data 
+  📍 STEP: fetch_market_data
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: DATA FETCHING | STEP: fetch_market_data 
+  ⏳ Executing node: fetch_market_data
+[2025-08-18 08:55:14] INFO     
+  Completed node: fetch_market_data
+[2025-08-18 08:55:14] INFO     
+  State summary: {'session_id': '62127097-eb14-4f1d-97de-31b0a5b75332', 'current_step': 'error', 'iteration': 0, 'strategy_name': '', 'is_profitable': False, 'errors': 5, 'warnings': 1}
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] WARNING  | PHASE: DATA FETCHING | STEP: fetch_market_data 
+  Errors in state
+  DATA:
+    - errors: ['Failed to fetch BTC/USDT:USDT 1h', 'Failed to fetch BTC/USDT:USDT 4h', 'Failed to fetch ETH/USDT:USDT 1h', 'Failed to fetch ETH/USDT:USDT 4h', 'No candle data available for any symbol/timeframe']
+[2025-08-18 08:55:14] INFO     
+  Generating strategy idea
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: STRATEGY GENERATION 
+  📋 PHASE: STRATEGY GENERATION
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: STRATEGY GENERATION | STEP: Idea Generation 
+  📍 STEP: Idea Generation
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: STRATEGY GENERATION | STEP: Idea Generation 
+  ⏳ Analyzing market data for strategy ideas
+
+------------------------------------------------------------
+[2025-08-18 08:55:14] INFO     | PHASE: STRATEGY GENERATION | STEP: Idea Generation 
+  ⏳ Calling LLM for strategy idea generation
+[2025-08-18 08:55:15] INFO     
+  Initialized DeepSeek client for model: deepseek-chat
+[2025-08-18 08:55:35] INFO     
+  Stopping MCP client...

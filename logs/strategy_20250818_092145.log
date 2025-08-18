@@ -1,0 +1,372 @@
+[2025-08-18 09:21:45] INFO     
+  Logging initialized - Session: 20250818_092145
+[2025-08-18 09:21:45] INFO     
+  Human-readable log: logs/strategy_20250818_092145.log
+[2025-08-18 09:21:45] INFO     
+  Structured log: logs/strategy_20250818_092145.json
+[2025-08-18 09:21:45] INFO     
+  MCP client initialized with server at /Users/dasein/dev/freqtrade/freqtrade_mcp/run_server.py
+[2025-08-18 09:21:45] INFO     
+  Starting MCP server subprocess...
+[2025-08-18 09:21:48] INFO     
+  MCP client connected successfully
+[2025-08-18 09:21:48] INFO     
+  Available tools: ['download_candles', 'backtest_strategy', 'hyperopt_strategy', 'list_results', 'get_result', 'create_userdir', 'create_config', 'create_strategy', 'create_strategy_wireframe', 'extract_backtest_data', 'extract_hyperopt_data', 'search_results']
+[2025-08-18 09:21:48] INFO     
+  MCP connection validation successful
+[2025-08-18 09:21:48] INFO     
+  Stopping MCP client...
+[2025-08-18 09:21:48] INFO     
+  Starting strategy development workflow
+
+------------------------------------------------------------
+[2025-08-18 09:21:48] INFO     | PHASE: WORKFLOW INITIALIZATION 
+  📋 PHASE: WORKFLOW INITIALIZATION
+
+------------------------------------------------------------
+[2025-08-18 09:21:48] INFO     | PHASE: WORKFLOW INITIALIZATION | STEP: None 
+  ⏳ Starting strategy development for 2 symbols
+[2025-08-18 09:21:48] INFO     
+  Starting MCP server subprocess...
+[2025-08-18 09:21:50] INFO     
+  MCP client connected successfully
+[2025-08-18 09:21:50] INFO     
+  Available tools: ['download_candles', 'backtest_strategy', 'hyperopt_strategy', 'list_results', 'get_result', 'create_userdir', 'create_config', 'create_strategy', 'create_strategy_wireframe', 'extract_backtest_data', 'extract_hyperopt_data', 'search_results']
+[2025-08-18 09:21:50] INFO     
+  MCP client connected, starting workflow
+
+------------------------------------------------------------
+[2025-08-18 09:21:50] INFO     | PHASE: WORKFLOW EXECUTION 
+  📋 PHASE: WORKFLOW EXECUTION
+[2025-08-18 09:21:50] INFO     
+  Starting market data fetch
+
+------------------------------------------------------------
+[2025-08-18 09:21:50] INFO     | PHASE: DATA FETCHING 
+  📋 PHASE: DATA FETCHING
+
+------------------------------------------------------------
+[2025-08-18 09:21:50] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  📍 STEP: Market Data Collection
+[2025-08-18 09:21:50] INFO     
+  Fetching BTC/USDT:USDT 1h
+
+------------------------------------------------------------
+[2025-08-18 09:21:50] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  ⏳ Fetching BTC/USDT:USDT 1h [0/2] (0.0%)
+[2025-08-18 09:21:50] INFO     
+  Downloading BTC/USDT:USDT 1h from MCP
+[2025-08-18 09:21:50] INFO     
+  Fetching BTC/USDT:USDT 1h data for 365 days
+[2025-08-18 09:21:50] INFO     
+  Detected futures pairs, setting trading_mode=futures
+[2025-08-18 09:21:50] DEBUG    
+  Calling tool: download_candles with args: {'pairs': ['BTC/USDT:USDT'], 'timeframes': ['1h'], 'date_range': 'last 365 days', 'exchange': 'binance', 'trading_mode': 'futures'}
+
+================================================================================
+[2025-08-18 09:21:53] ERROR    
+  MCP error: list index out of range
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:117 in fetch_candles_from_mcp
+
+================================================================================
+[2025-08-18 09:21:53] ERROR    
+  Failed to fetch BTC/USDT:USDT 1h
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:203 in fetch_market_data
+[2025-08-18 09:21:53] INFO     
+  Fetching ETH/USDT:USDT 1h
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  ⏳ Fetching ETH/USDT:USDT 1h [0/2] (0.0%)
+[2025-08-18 09:21:53] INFO     
+  Downloading ETH/USDT:USDT 1h from MCP
+[2025-08-18 09:21:53] INFO     
+  Fetching ETH/USDT:USDT 1h data for 365 days
+[2025-08-18 09:21:53] INFO     
+  Detected futures pairs, setting trading_mode=futures
+[2025-08-18 09:21:53] DEBUG    
+  Calling tool: download_candles with args: {'pairs': ['ETH/USDT:USDT'], 'timeframes': ['1h'], 'date_range': 'last 365 days', 'exchange': 'binance', 'trading_mode': 'futures'}
+
+================================================================================
+[2025-08-18 09:21:53] ERROR    
+  MCP error: list index out of range
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:117 in fetch_candles_from_mcp
+
+================================================================================
+[2025-08-18 09:21:53] ERROR    
+  Failed to fetch ETH/USDT:USDT 1h
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:203 in fetch_market_data
+[2025-08-18 09:21:53] INFO     
+  Data fetch complete: 0 fetched, 0 from cache, 2 errors
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] INFO     | PHASE: DATA FETCHING | STEP: Market Data Collection 
+  ✨ SUCCESS: Data fetch completed
+  DATA:
+    - fetched: 0
+    - cached: 0
+    - errors: 2
+    - total_candles: 0
+
+================================================================================
+[2025-08-18 09:21:53] ERROR    
+  No candle data available, cannot continue
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/data_fetcher.py:247 in fetch_market_data
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] INFO     | PHASE: DATA FETCHING | STEP: fetch_market_data 
+  📍 STEP: fetch_market_data
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] INFO     | PHASE: DATA FETCHING | STEP: fetch_market_data 
+  ⏳ Executing node: fetch_market_data
+[2025-08-18 09:21:53] INFO     
+  Completed node: fetch_market_data
+[2025-08-18 09:21:53] INFO     
+  State summary: {'session_id': '1c0ac415-f3a3-4b4e-89c7-28e3141a69e9', 'current_step': 'error', 'iteration': 0, 'strategy_name': '', 'is_profitable': False, 'errors': 3, 'warnings': 1}
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] WARNING  | PHASE: DATA FETCHING | STEP: fetch_market_data 
+  Errors in state
+  DATA:
+    - errors: ['Failed to fetch BTC/USDT:USDT 1h', 'Failed to fetch ETH/USDT:USDT 1h', 'No candle data available for any symbol/timeframe']
+[2025-08-18 09:21:53] INFO     
+  Generating strategy idea
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] INFO     | PHASE: STRATEGY GENERATION 
+  📋 PHASE: STRATEGY GENERATION
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] INFO     | PHASE: STRATEGY GENERATION | STEP: Idea Generation 
+  📍 STEP: Idea Generation
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] INFO     | PHASE: STRATEGY GENERATION | STEP: Idea Generation 
+  ⏳ Analyzing market data for strategy ideas
+
+------------------------------------------------------------
+[2025-08-18 09:21:53] INFO     | PHASE: STRATEGY GENERATION | STEP: Idea Generation 
+  ⏳ Calling LLM for strategy idea generation
+[2025-08-18 09:21:54] INFO     
+  Initialized DeepSeek client for model: deepseek-chat
+
+------------------------------------------------------------
+[2025-08-18 09:22:37] INFO     | PHASE: STRATEGY GENERATION | STEP: Idea Generation 
+  ✨ SUCCESS: Strategy idea generated
+  DATA:
+    - name: Volatility-Adjusted Trend Continuation
+    - description: A strategy that combines trend-following with volatility adjustments to capitalize on strong trends while avoiding false breakouts. It uses a mix of momentum and volatility indicators to confirm trends and filter out noise.
+    - indicators: ['EMA (20)', 'Bollinger Bands (20, 2)', 'RSI (14)', 'ATR (14)', 'Volume (OBV)']
+    - timeframe: 1h
+[2025-08-18 09:22:37] INFO     
+  Generated strategy idea: Volatility-Adjusted Trend Continuation
+[2025-08-18 09:22:37] INFO     
+  Indicators: EMA (20), Bollinger Bands (20, 2), RSI (14), ATR (14), Volume (OBV)
+[2025-08-18 09:22:37] INFO     
+  Timeframe preference: 1h
+
+------------------------------------------------------------
+[2025-08-18 09:22:37] INFO     | PHASE: STRATEGY GENERATION | STEP: generate_strategy_idea 
+  📍 STEP: generate_strategy_idea
+
+------------------------------------------------------------
+[2025-08-18 09:22:37] INFO     | PHASE: STRATEGY GENERATION | STEP: generate_strategy_idea 
+  ⏳ Executing node: generate_strategy_idea
+[2025-08-18 09:22:37] INFO     
+  Completed node: generate_strategy_idea
+[2025-08-18 09:22:37] INFO     
+  State summary: {'session_id': '1c0ac415-f3a3-4b4e-89c7-28e3141a69e9', 'current_step': 'generate_strategy_idea', 'iteration': 0, 'strategy_name': 'AI_Volatility-Adjusted Trend Continuation_20250818_0922', 'is_profitable': False, 'errors': 3, 'warnings': 1}
+
+------------------------------------------------------------
+[2025-08-18 09:22:37] WARNING  | PHASE: STRATEGY GENERATION | STEP: generate_strategy_idea 
+  Errors in state
+  DATA:
+    - errors: ['Failed to fetch BTC/USDT:USDT 1h', 'Failed to fetch ETH/USDT:USDT 1h', 'No candle data available for any symbol/timeframe']
+[2025-08-18 09:22:37] INFO     
+  Creating strategy code
+[2025-08-18 09:22:37] INFO     
+  Initialized DeepSeek client for model: deepseek-chat
+[2025-08-18 09:23:52] INFO     
+  Strategy saved to /Users/dasein/dev/freqtrade/user_data/strategies/AI_Volatility-Adjusted Trend Continuation_20250818_0922.py
+[2025-08-18 09:23:52] INFO     
+  Strategy code created and saved to /Users/dasein/dev/freqtrade/user_data/strategies/AI_Volatility-Adjusted Trend Continuation_20250818_0922.py
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: STRATEGY GENERATION | STEP: create_strategy_code 
+  📍 STEP: create_strategy_code
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: STRATEGY GENERATION | STEP: create_strategy_code 
+  ⏳ Executing node: create_strategy_code
+[2025-08-18 09:23:52] INFO     
+  Completed node: create_strategy_code
+[2025-08-18 09:23:52] INFO     
+  State summary: {'session_id': '1c0ac415-f3a3-4b4e-89c7-28e3141a69e9', 'current_step': 'create_strategy_code', 'iteration': 0, 'strategy_name': 'AI_Volatility-Adjusted Trend Continuation_20250818_0922', 'is_profitable': False, 'errors': 3, 'warnings': 1}
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] WARNING  | PHASE: STRATEGY GENERATION | STEP: create_strategy_code 
+  Errors in state
+  DATA:
+    - errors: ['Failed to fetch BTC/USDT:USDT 1h', 'Failed to fetch ETH/USDT:USDT 1h', 'No candle data available for any symbol/timeframe']
+[2025-08-18 09:23:52] INFO     
+  Starting hyperopt optimization
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION 
+  📋 PHASE: HYPEROPT OPTIMIZATION
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION | STEP: Initialization 
+  📍 STEP: Initialization
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION | STEP: Initialization 
+  ⏳ Starting hyperopt for strategy: AI_Volatility-Adjusted Trend Continuation_20250818_0922
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION | STEP: Configuration 
+  📍 STEP: Configuration
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION | STEP: Configuration 
+  Hyperopt configuration prepared
+  DATA:
+    - strategy: AI_Volatility-Adjusted Trend Continuation_20250818_0922
+    - epochs: 100
+    - spaces: ['buy', 'sell', 'roi', 'stoploss']
+    - loss_function: SharpeHyperOptLoss
+    - timeframe: 1h
+    - timerange: 20240101-20250101
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION | STEP: Execution 
+  📍 STEP: Execution
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION | STEP: Execution 
+  ⏳ Running hyperopt with 100 epochs...
+[2025-08-18 09:23:52] INFO     
+  Calling MCP hyperopt_strategy with params: {
+  "strategy": "AI_Volatility-Adjusted Trend Continuation_20250818_0922",
+  "timeframe": "1h",
+  "timerange": "20240101-20250101",
+  "epochs": 100,
+  "spaces": [
+    "buy",
+    "sell",
+    "roi",
+    "stoploss"
+  ],
+  "loss_function": "SharpeHyperOptLoss",
+  "random_state": 42,
+  "jobs": -1,
+  "print_all": false,
+  "print_json": true
+}
+[2025-08-18 09:23:52] INFO     
+  Detected futures pairs for hyperopt, setting trading_mode=futures
+[2025-08-18 09:23:52] DEBUG    
+  Calling tool: hyperopt_strategy with args: {'strategy': 'AI_Volatility-Adjusted Trend Continuation_20250818_0922', 'epochs': 100, 'loss': 'SharpeHyperOptLoss', 'spaces': ['buy', 'sell', 'roi', 'stoploss'], 'trading_mode': 'futures', 'timerange': '20240101-20250101'}
+[2025-08-18 09:23:52] INFO     
+  MCP hyperopt result: {
+  "result": "Input validation error: 'strategy_name' is a required property"
+}
+
+================================================================================
+[2025-08-18 09:23:52] ERROR    | PHASE: HYPEROPT OPTIMIZATION | STEP: Execution 
+  Hyperopt failed: Unknown hyperopt error
+  ERROR DETAILS:
+    {
+  "error": "Unknown hyperopt error",
+  "result": {
+    "result": "Input validation error: 'strategy_name' is a required property"
+  },
+  "stdout": "",
+  "stderr": ""
+}
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/logging_config.py:208 in log_error
+
+================================================================================
+[2025-08-18 09:23:52] ERROR    
+  Hyperopt failed with details: {
+  "error": "Unknown hyperopt error",
+  "result": {
+    "result": "Input validation error: 'strategy_name' is a required property"
+  },
+  "stdout": "",
+  "stderr": ""
+}
+  Location: /Users/dasein/dev/freqtrade/freqtrade_mcp/strategy_agent/nodes/hyperopt_runner.py:145 in run_hyperopt
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION | STEP: run_hyperopt 
+  📍 STEP: run_hyperopt
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: HYPEROPT OPTIMIZATION | STEP: run_hyperopt 
+  ⏳ Executing node: run_hyperopt
+[2025-08-18 09:23:52] INFO     
+  Completed node: run_hyperopt
+[2025-08-18 09:23:52] INFO     
+  State summary: {'session_id': '1c0ac415-f3a3-4b4e-89c7-28e3141a69e9', 'current_step': 'run_hyperopt', 'iteration': 0, 'strategy_name': 'AI_Volatility-Adjusted Trend Continuation_20250818_0922', 'is_profitable': False, 'errors': 4, 'warnings': 1}
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] WARNING  | PHASE: HYPEROPT OPTIMIZATION | STEP: run_hyperopt 
+  Errors in state
+  DATA:
+    - errors: ['Failed to fetch BTC/USDT:USDT 1h', 'Failed to fetch ETH/USDT:USDT 1h', 'No candle data available for any symbol/timeframe', 'Unknown hyperopt error']
+[2025-08-18 09:23:52] INFO     
+  Analyzing strategy results
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: RESULTS ANALYSIS 
+  📋 PHASE: RESULTS ANALYSIS
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: RESULTS ANALYSIS | STEP: Performance Evaluation 
+  📍 STEP: Performance Evaluation
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: RESULTS ANALYSIS | STEP: analyze_results 
+  📍 STEP: analyze_results
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: RESULTS ANALYSIS | STEP: analyze_results 
+  ⏳ Executing node: analyze_results
+[2025-08-18 09:23:52] INFO     
+  Completed node: analyze_results
+[2025-08-18 09:23:52] INFO     
+  State summary: {'session_id': '1c0ac415-f3a3-4b4e-89c7-28e3141a69e9', 'current_step': 'analyze_results', 'iteration': 0, 'strategy_name': 'AI_Volatility-Adjusted Trend Continuation_20250818_0922', 'is_profitable': False, 'errors': 5, 'warnings': 1}
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] WARNING  | PHASE: RESULTS ANALYSIS | STEP: analyze_results 
+  Errors in state
+  DATA:
+    - errors: ['Failed to fetch BTC/USDT:USDT 1h', 'Failed to fetch ETH/USDT:USDT 1h', 'No candle data available for any symbol/timeframe', 'Unknown hyperopt error', 'No MCP client available for backtest']
+[2025-08-18 09:23:52] INFO     
+  Rewriting strategy based on analysis
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: RESULTS ANALYSIS | STEP: rewrite_strategy 
+  📍 STEP: rewrite_strategy
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] INFO     | PHASE: RESULTS ANALYSIS | STEP: rewrite_strategy 
+  ⏳ Executing node: rewrite_strategy
+[2025-08-18 09:23:52] INFO     
+  Completed node: rewrite_strategy
+[2025-08-18 09:23:52] INFO     
+  State summary: {'session_id': '1c0ac415-f3a3-4b4e-89c7-28e3141a69e9', 'current_step': 'rewrite_strategy', 'iteration': 1, 'strategy_name': 'AI_Volatility-Adjusted Trend Continuation_20250818_0922', 'is_profitable': False, 'errors': 6, 'warnings': 1}
+
+------------------------------------------------------------
+[2025-08-18 09:23:52] WARNING  | PHASE: RESULTS ANALYSIS | STEP: rewrite_strategy 
+  Errors in state
+  DATA:
+    - errors: ['Failed to fetch ETH/USDT:USDT 1h', 'No candle data available for any symbol/timeframe', 'Unknown hyperopt error', 'No MCP client available for backtest', 'No analysis available for rewrite']
+[2025-08-18 09:23:52] INFO     
+  Creating strategy code
+[2025-08-18 09:23:52] INFO     
+  Initialized DeepSeek client for model: deepseek-chat
+[2025-08-18 09:24:22] INFO     
+  Stopping MCP client...

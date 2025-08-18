@@ -96,9 +96,9 @@ class StrategyDevelopmentState(TypedDict):
     retry_count: int
     max_retries: int  # Default: 3
     
-    # MCP Connection
-    mcp_server_url: str
-    mcp_connected: bool
+    # Critical Error Handling
+    critical_error: bool  # Flag for critical errors that should halt execution
+    halt_execution: bool  # Flag to halt the workflow
     
     # Metadata
     session_id: str
@@ -122,7 +122,6 @@ class CheckpointState(BaseModel):
 def create_initial_state(
     symbols: List[str],
     timeframes: List[str],
-    mcp_server_url: str = "http://localhost:8000",
     max_iterations: int = 3,
     hyperopt_epochs: int = 100
 ) -> StrategyDevelopmentState:
@@ -179,9 +178,9 @@ def create_initial_state(
         retry_count=0,
         max_retries=3,
         
-        # MCP Connection
-        mcp_server_url=mcp_server_url,
-        mcp_connected=False,
+        # Critical Error Handling
+        critical_error=False,
+        halt_execution=False,
         
         # Metadata
         session_id=str(uuid4()),
@@ -221,7 +220,11 @@ def update_state_metrics(
 
 
 def should_continue_optimization(state: StrategyDevelopmentState) -> str:
-    """Determine next step based on performance"""
+    """Determine next step based on performance and critical errors"""
+    # Check for critical errors first - halt execution immediately
+    if state.get("critical_error", False) or state.get("halt_execution", False):
+        return "return_best_attempt"  # Exit with best attempt on critical errors
+    
     if state["is_profitable"]:
         return "finalize_strategy"
     elif state["iteration_count"] >= state["max_iterations"]:
@@ -232,7 +235,7 @@ def should_continue_optimization(state: StrategyDevelopmentState) -> str:
 
 def get_state_summary(state: StrategyDevelopmentState) -> Dict[str, Any]:
     """Get a summary of the current state for logging"""
-    return {
+    summary = {
         "session_id": state["session_id"],
         "current_step": state["current_step"],
         "iteration": state["iteration_count"],
@@ -241,3 +244,11 @@ def get_state_summary(state: StrategyDevelopmentState) -> Dict[str, Any]:
         "errors": len(state["errors"]),
         "warnings": len(state["warnings"])
     }
+    
+    # Add critical error information if present
+    if state.get("critical_error", False):
+        summary["critical_error"] = True
+    if state.get("halt_execution", False):
+        summary["halt_execution"] = True
+        
+    return summary

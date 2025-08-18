@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python test_llm_debug.py:*)",
+      "Bash(python test:*)",
+      "Bash(pip install:*)",
+      "Bash(echo:*)",
+      "Bash(python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

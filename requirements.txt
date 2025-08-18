@@ -1,4 +1,4 @@
-mcp>=0.9.0
+mcp[client]>=0.9.0
 freqtrade>=2025.7
 dateparser>=1.1.0
 pycoingecko>=3.0.0
@@ -9,6 +9,9 @@ httpx>=0.24.0
 langgraph>=0.2.0
 langchain-core>=0.3.0
 instructor>=1.0.0
+
+# LLM provider dependencies (required for multi-provider support)
 openai>=1.0.0
-aiohttp>=3.9.0
-dotenv
+anthropic>=0.20.0
+groq>=0.4.0
+together>=0.2.0

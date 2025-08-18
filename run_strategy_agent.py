@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 """
-Example script to run the Strategy Development Agent
+Clean Strategy Development Agent runner
 """
 import asyncio
 import sys
 import os
 import argparse
 import logging
+from datetime import datetime
 from pathlib import Path
-
 import dotenv
-from dotenv
-
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-dotenv.load_dotenv()
+# Add current directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
 from strategy_agent import StrategyDevelopmentAgent
+from strategy_agent.logging_config import setup_logging
 
+dotenv.load_dotenv()
 
 async def main():
     """Main execution function"""
@@ -52,9 +51,8 @@ async def main():
         help="Minimum profit threshold (%)"
     )
     parser.add_argument(
-        "--mcp-url",
-        default="http://localhost:8000",
-        help="MCP server URL"
+        "--mcp-server-path",
+        help="Path to MCP server script (optional)"
     )
     parser.add_argument(
         "--resume",
@@ -68,16 +66,33 @@ async def main():
     
     args = parser.parse_args()
     
-    # Configure logging
+    # Configure enhanced logging
+    session_id = datetime.now().strftime('%Y%m%d_%H%M%S')
+    strategy_logger = setup_logging(session_id=session_id, verbose=args.verbose)
+    
+    # Also configure basic logging for other modules
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Check for OpenAI API key
-    if not os.getenv("OPENAI_API_KEY"):
-        print("❌ Error: OPENAI_API_KEY environment variable is required")
-        print("Please set it with: export OPENAI_API_KEY='your-api-key'")
+    print(f"📝 Logs will be saved to:")
+    print(f"   • logs/strategy_{session_id}.log (human-readable)")
+    print(f"   • logs/strategy_{session_id}.json (structured)")
+    print("-" * 50)
+    
+    # Check for LLM configuration
+    if not os.getenv("LLM_API_KEY"):
+        print("❌ Error: LLM_API_KEY environment variable is required")
+        print("Please set it with: export LLM_API_KEY='your-api-key'")
+        print("Also set: export LLM_MODEL='provider/model'")
+        print("Example: export LLM_MODEL='openai/gpt-4o-mini' LLM_API_KEY='sk-...'")
+        return 1
+    
+    if not os.getenv("LLM_MODEL"):
+        print("❌ Error: LLM_MODEL environment variable is required")
+        print("Please set it with: export LLM_MODEL='provider/model'")
+        print("Example: export LLM_MODEL='openai/gpt-4o-mini'")
         return 1
     
     print("🚀 Starting Strategy Development Agent")
@@ -85,27 +100,30 @@ async def main():
     print(f"⏰ Timeframes: {', '.join(args.timeframes)}")
     print(f"🔄 Max iterations: {args.max_iterations}")
     print(f"🎯 Min profit target: {args.min_profit}%")
+    print(f"🤖 LLM Model: {os.getenv('LLM_MODEL')}")
+    if args.mcp_server_path:
+        print(f"🔧 MCP server: {args.mcp_server_path}")
     print("-" * 50)
     
     # Initialize agent
     agent = StrategyDevelopmentAgent(
-        mcp_url=args.mcp_url,
         symbols=args.symbols,
         timeframes=args.timeframes,
         max_iterations=args.max_iterations,
         hyperopt_epochs=args.hyperopt_epochs,
-        min_profit_threshold=args.min_profit
+        min_profit_threshold=args.min_profit,
+        mcp_server_path=args.mcp_server_path
     )
     
     # Check MCP connection
-    if not agent.validate_connection():
-        print("❌ Failed to connect to MCP server at", args.mcp_url)
-        print("Please ensure the MCP server is running:")
-        print("  cd freqtrade_mcp")
-        print("  python run_server.py")
+    print("🔗 Testing MCP server connection...")
+    if not await agent.validate_connection():
+        print("❌ Failed to connect to MCP server")
+        print("Please ensure the MCP server is available:")
+        print("  cd src && python -m server")
         return 1
     
-    print("✅ Connected to MCP server")
+    print("✅ MCP server connection successful")
     print("-" * 50)
     
     try:

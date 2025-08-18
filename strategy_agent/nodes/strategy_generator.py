@@ -2,12 +2,11 @@
 Strategy generation nodes using Instructor and LLMs
 """
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 import json
-import instructor
-from openai import AsyncOpenAI
 from pathlib import Path
+from pydantic import BaseModel
 
 from ..state import StrategyDevelopmentState, StrategyIdea
 from ..prompts.strategy_prompts import (
@@ -15,11 +14,40 @@ from ..prompts.strategy_prompts import (
     STRATEGY_CODE_PROMPT,
     STRATEGY_REWRITE_PROMPT
 )
+from ..llm_client import create_llm_client, LLMConfig
+from ..config import config
+from ..logging_config import get_logger
 
 logger = logging.getLogger(__name__)
+strategy_logger = get_logger()
 
-# Initialize Instructor with OpenAI
-client = instructor.from_openai(AsyncOpenAI())
+
+class StrategyCodeResponse(BaseModel):
+    """Response model for strategy code generation (DRY principle)"""
+    strategy_code: str
+    explanation: str
+
+
+def _get_idea_generation_client():
+    """Get LLM client for idea generation (uses regular model)"""
+    try:
+        llm_config_dict = config.get_llm_config()
+        llm_config = LLMConfig(**llm_config_dict)
+        return create_llm_client(llm_config)
+    except Exception as e:
+        logger.error(f"Failed to create LLM client for idea generation: {e}")
+        raise
+
+
+def _get_code_generation_client():
+    """Get LLM client for code generation (uses code model with lower temperature)"""
+    try:
+        llm_config_dict = config.get_llm_code_config()
+        llm_config = LLMConfig(**llm_config_dict)
+        return create_llm_client(llm_config)
+    except Exception as e:
+        logger.error(f"Failed to create LLM client for code generation: {e}")
+        raise
 
 
 async def generate_strategy_idea(state: StrategyDevelopmentState) -> StrategyDevelopmentState:
@@ -27,16 +55,19 @@ async def generate_strategy_idea(state: StrategyDevelopmentState) -> StrategyDev
     Node: Generate a trading strategy idea based on market data analysis
     """
     logger.info("Generating strategy idea")
+    strategy_logger.set_phase("STRATEGY GENERATION")
+    strategy_logger.set_step("Idea Generation")
     state["current_step"] = "generate_strategy_idea"
     
     try:
         # Prepare market context
+        strategy_logger.log_progress("Analyzing market data for strategy ideas")
         market_context = prepare_market_context(state["candle_data"])
         
-        # Generate idea using Instructor
-        idea = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            response_model=StrategyIdea,
+        # Generate idea using configured LLM client
+        strategy_logger.log_progress("Calling LLM for strategy idea generation")
+        llm_client = _get_idea_generation_client()
+        idea = await llm_client.create_completion(
             messages=[
                 {
                     "role": "system",
@@ -51,6 +82,7 @@ async def generate_strategy_idea(state: StrategyDevelopmentState) -> StrategyDev
                     )
                 }
             ],
+            response_model=StrategyIdea,
             temperature=0.7,
             max_retries=2
         )
@@ -59,12 +91,24 @@ async def generate_strategy_idea(state: StrategyDevelopmentState) -> StrategyDev
         state["strategy_idea"] = idea
         state["strategy_name"] = f"AI_{idea.name}_{datetime.now().strftime('%Y%m%d_%H%M')}"
         
+        strategy_logger.log_success("Strategy idea generated", {
+            "name": idea.name,
+            "description": idea.description,
+            "indicators": idea.indicators,
+            "timeframe": idea.timeframe_preference
+        })
+        
         logger.info(f"Generated strategy idea: {idea.name}")
         logger.info(f"Indicators: {', '.join(idea.indicators)}")
         logger.info(f"Timeframe preference: {idea.timeframe_preference}")
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         logger.error(f"Error generating strategy idea: {str(e)}")
+        logger.debug(f"Traceback: {error_trace}")
+        
+        strategy_logger.log_error(f"Failed to generate strategy idea", e, error_trace)
         state["errors"].append(f"Failed to generate strategy idea: {str(e)}")
         state["retry_count"] += 1
     
@@ -85,9 +129,10 @@ async def create_strategy_code(state: StrategyDevelopmentState) -> StrategyDevel
     try:
         idea = state["strategy_idea"]
         
-        # Generate strategy code
-        code_response = await client.chat.completions.create(
-            model="gpt-4o",
+        # Generate strategy code using code generation client
+        llm_client = _get_code_generation_client()
+        
+        code_response = await llm_client.create_completion(
             messages=[
                 {
                     "role": "system",
@@ -106,11 +151,11 @@ async def create_strategy_code(state: StrategyDevelopmentState) -> StrategyDevel
                     )
                 }
             ],
-            temperature=0.3,
+            response_model=StrategyCodeResponse,
             max_tokens=4000
         )
         
-        strategy_code = code_response.choices[0].message.content
+        strategy_code = code_response.strategy_code
         
         # Clean and validate code
         strategy_code = clean_strategy_code(strategy_code)
@@ -157,9 +202,10 @@ async def rewrite_strategy(state: StrategyDevelopmentState) -> StrategyDevelopme
     try:
         analysis = state["strategy_analysis"]
         
-        # Generate improved strategy
-        improved_response = await client.chat.completions.create(
-            model="gpt-4o",
+        # Generate improved strategy using code generation client
+        llm_client = _get_code_generation_client()
+        
+        improved_response = await llm_client.create_completion(
             messages=[
                 {
                     "role": "system",
@@ -181,11 +227,12 @@ async def rewrite_strategy(state: StrategyDevelopmentState) -> StrategyDevelopme
                     )
                 }
             ],
+            response_model=StrategyCodeResponse,
             temperature=0.5,
             max_tokens=4000
         )
         
-        improved_code = improved_response.choices[0].message.content
+        improved_code = improved_response.strategy_code
         improved_code = clean_strategy_code(improved_code)
         
         # Update strategy name for new version
@@ -264,8 +311,11 @@ def clean_strategy_code(code: str) -> str:
 
 def save_strategy_file(strategy_name: str, code: str) -> Path:
     """Save strategy code to file"""
-    # Strategy files go in the parent freqtrade user_data/strategies directory
-    strategies_dir = Path("../../user_data/strategies")
+    # Strategy files go in the freqtrade user_data/strategies directory
+    # Navigate from freqtrade_mcp/strategy_agent/nodes/ to freqtrade/user_data/strategies/
+    current_dir = Path(__file__).parent  # .../freqtrade_mcp/strategy_agent/nodes/
+    freqtrade_dir = current_dir.parent.parent.parent  # .../freqtrade/
+    strategies_dir = freqtrade_dir / "user_data" / "strategies"
     strategies_dir.mkdir(parents=True, exist_ok=True)
     
     strategy_file = strategies_dir / f"{strategy_name}.py"

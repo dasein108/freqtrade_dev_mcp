@@ -204,12 +204,23 @@ def handle_errors(state: StrategyDevelopmentState) -> str:
 
 ### Environment Variables
 ```bash
-MCP_SERVER_URL=http://localhost:8000
+# LLM Configuration (supports multiple providers)
+LLM_MODEL=deepseek/deepseek-chat              # Model identifier
+LLM_API_KEY=sk-6a44a7a4f94245138c965c499a765709  # API key
+LLM_CODE_MODEL=deepseek/deepseek-coder        # Optional: code-specific model
+LLM_TEMPERATURE=0.3                           # Generation temperature
+LLM_TIMEOUT=300                               # Request timeout
+
+# Agent Configuration  
 CACHE_DIR=freqtrade_mcp/strategy_agent/cache
 FREQTRADE_USER_DATA=../user_data  # Relative path from freqtrade_mcp/
 MAX_ITERATIONS=3
 HYPEROPT_EPOCHS=100
 MIN_PROFIT_THRESHOLD=5.0  # 5% minimum profit
+
+# Standard LLM configuration (no legacy support)
+LLM_API_KEY=sk-...
+LLM_MODEL=openai/gpt-4o-mini
 ```
 
 ### Strategy Templates
@@ -257,9 +268,11 @@ sys.path.append('..')
 
 from strategy_agent import StrategyDevelopmentAgent
 
+# Multi-LLM support - configure via environment variables
+# export LLM_MODEL="deepseek/deepseek-chat"
+# export LLM_API_KEY="sk-6a44a7a4f94245138c965c499a765709"
+
 agent = StrategyDevelopmentAgent(
-    mcp_url="http://localhost:8000",
-    freqtrade_data_dir="../user_data",
     symbols=["BTC/USDT:USDT", "ETH/USDT:USDT", "SOL/USDT:USDT"],
     timeframes=["1h", "4h"],
     max_iterations=3
@@ -275,6 +288,28 @@ if result["success"]:
 else:
     print(f"Failed after {result['iterations']} attempts")
     print(f"Best attempt: {result['best_metrics']}")
+```
+
+### Command Line Examples
+
+```bash
+# DeepSeek (as requested)
+export LLM_MODEL="deepseek/deepseek-chat"
+export LLM_API_KEY="sk-6a44a7a4f94245138c965c499a765709"
+python examples/run_strategy_agent.py
+
+# OpenAI
+export LLM_MODEL="openai/gpt-4o-mini"
+export LLM_API_KEY="sk-..."
+python examples/run_strategy_agent.py
+
+# Anthropic Claude
+export LLM_MODEL="claude-3-haiku-20240307"
+export LLM_API_KEY="sk-ant-..."
+python examples/run_strategy_agent.py
+
+# Test your LLM configuration
+python examples/test_llm_providers.py
 ```
 
 ## Success Metrics

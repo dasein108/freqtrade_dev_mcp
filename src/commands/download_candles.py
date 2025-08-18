@@ -44,6 +44,7 @@ class DownloadCandlesCommand(BaseCommand):
         timeframes: Union[List[str], str],
         date_range: str,
         exchange: str = None,
+        trading_mode: str = None,
         **kwargs
     ) -> Dict[str, Any]:
         """Execute download candles command.
@@ -75,11 +76,21 @@ class DownloadCandlesCommand(BaseCommand):
             # Validate that we have data directory
             self.config.full_data_dir.mkdir(parents=True, exist_ok=True)
 
+            # Detect trading mode if not specified
+            if trading_mode is None:
+                # Auto-detect from pairs
+                if any(":USDT" in pair or ":BUSD" in pair for pair in pairs_list):
+                    trading_mode = "futures"
+                    logger.info("Auto-detected futures trading mode from pairs")
+                else:
+                    trading_mode = "spot"
+                    logger.info("Using spot trading mode")
+            
             # Build and execute freqtrade download command
             results = []
             for timeframe in timeframes_list:
                 result = await self._download_for_timeframe(
-                    pairs_list, timeframe, timerange, exchange
+                    pairs_list, timeframe, timerange, exchange, trading_mode
                 )
                 results.append(result)
 
@@ -156,7 +167,8 @@ class DownloadCandlesCommand(BaseCommand):
         pairs: List[str], 
         timeframe: str, 
         timerange: str, 
-        exchange: str
+        exchange: str,
+        trading_mode: str = "spot"
     ) -> Dict[str, Any]:
         """Download data for specific timeframe."""
         await self.mcp_log("info", f"Downloading {timeframe} data for {len(pairs)} pairs on {exchange}")
@@ -165,21 +177,22 @@ class DownloadCandlesCommand(BaseCommand):
             # Use freqtrade package functions for better performance
             try:
                 await self.mcp_log("info", "Using freqtrade package for download")
-                return await self._download_using_package(pairs, timeframe, timerange, exchange)
+                return await self._download_using_package(pairs, timeframe, timerange, exchange, trading_mode)
             except Exception as e:
                 await self.mcp_log("warning", f"Package-based download failed, falling back to CLI: {e}")
         else:
             await self.mcp_log("warning", "Freqtrade package not available, using CLI mode")
         
         # Fallback to CLI mode
-        return await self._download_using_cli(pairs, timeframe, timerange, exchange)
+        return await self._download_using_cli(pairs, timeframe, timerange, exchange, trading_mode)
 
     async def _download_using_package(
         self, 
         pairs: List[str], 
         timeframe: str, 
         timerange: str, 
-        exchange: str
+        exchange: str,
+        trading_mode: str = "spot"
     ) -> Dict[str, Any]:
         """Download using freqtrade package functions."""
         import asyncio
@@ -196,6 +209,8 @@ class DownloadCandlesCommand(BaseCommand):
                     'ccxt_async_config': {},
                 },
                 'datadir': str(self.config.full_data_dir),
+                'trading_mode': trading_mode,
+                'margin_mode': 'isolated' if trading_mode == 'futures' else '',
             })
             
             await self.mcp_log("info", f"Data directory: {self.config.full_data_dir}")
@@ -261,7 +276,8 @@ class DownloadCandlesCommand(BaseCommand):
         pairs: List[str], 
         timeframe: str, 
         timerange: str, 
-        exchange: str
+        exchange: str,
+        trading_mode: str = "spot"
     ) -> Dict[str, Any]:
         """Download using CLI commands (fallback)."""
         await self.mcp_log("info", "Attempting CLI download with freqtrade command")
@@ -293,6 +309,11 @@ class DownloadCandlesCommand(BaseCommand):
             "--timeframes", timeframe,
             "--timerange", timerange,
         ]
+        
+        # Add trading mode for futures
+        if trading_mode == "futures":
+            args.extend(["--trading-mode", "futures"])
+            await self.mcp_log("info", "Adding futures trading mode to CLI command")
         
         # Add pairs
         for pair in pairs:

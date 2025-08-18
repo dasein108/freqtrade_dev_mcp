@@ -6,15 +6,16 @@ import json
 import pickle
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pathlib import Path
 import hashlib
-import aiohttp
-import asyncio
 
 from ..state import StrategyDevelopmentState
+from ..mcp_client import FreqtradeMCPClient
+from ..logging_config import get_logger
 
 logger = logging.getLogger(__name__)
+strategy_logger = get_logger()
 
 
 class DataCache:
@@ -69,13 +70,19 @@ class DataCache:
 
 
 async def fetch_candles_from_mcp(
-    mcp_url: str,
+    mcp_client: FreqtradeMCPClient,
     symbol: str,
     timeframe: str,
     days: int = 365
 ) -> Dict[str, Any]:
     """
-    Fetch candle data from MCP server
+    Fetch candle data from MCP server via stdio
+    
+    Args:
+        mcp_client: Connected MCP client
+        symbol: Trading pair symbol
+        timeframe: Timeframe
+        days: Number of days to fetch
     
     Returns:
         Dictionary with OHLCV data
@@ -85,55 +92,40 @@ async def fetch_candles_from_mcp(
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
         
-        # Prepare MCP request
-        payload = {
-            "method": "download_candles",
-            "params": {
-                "pairs": [symbol],
-                "timeframe": timeframe,
-                "timerange": f"{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}",
-                "exchange": "binance"
-            }
-        }
+        logger.info(f"Fetching {symbol} {timeframe} data for {days} days")
         
-        # Make request to MCP server
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{mcp_url}/tools/download_candles",
-                json=payload,
-                timeout=aiohttp.ClientTimeout(total=300)
-            ) as response:
-                if response.status == 200:
-                    result = await response.json()
+        # Call MCP download_candles tool
+        result = await mcp_client.download_candles(
+            pairs=[symbol],
+            timeframe=timeframe,
+            days=days
+        )
+        
+        # Parse the result
+        if result.get("success"):
+            return {
+                "symbol": symbol,
+                "timeframe": timeframe,
+                "data": result.get("data", {}),
+                "candle_count": result.get("candle_count", 0),
+                "date_range": {
+                    "start": start_date.isoformat(),
+                    "end": end_date.isoformat()
+                }
+            }
+        else:
+            logger.error(f"MCP error: {result.get('error')}")
+            return None
                     
-                    # Parse the candle data
-                    if result.get("success"):
-                        return {
-                            "symbol": symbol,
-                            "timeframe": timeframe,
-                            "data": result.get("data", {}),
-                            "candle_count": result.get("candle_count", 0),
-                            "date_range": {
-                                "start": start_date.isoformat(),
-                                "end": end_date.isoformat()
-                            }
-                        }
-                    else:
-                        logger.error(f"MCP error: {result.get('error')}")
-                        return None
-                else:
-                    logger.error(f"HTTP error {response.status} from MCP server")
-                    return None
-                    
-    except asyncio.TimeoutError:
-        logger.error(f"Timeout fetching {symbol} {timeframe}")
-        return None
     except Exception as e:
         logger.error(f"Error fetching candles: {str(e)}")
         return None
 
 
-async def fetch_market_data(state: StrategyDevelopmentState) -> StrategyDevelopmentState:
+async def fetch_market_data(
+    state: StrategyDevelopmentState,
+    mcp_client: Optional[FreqtradeMCPClient] = None
+) -> StrategyDevelopmentState:
     """
     Node: Fetch market data for all symbols and timeframes
     
@@ -141,9 +133,22 @@ async def fetch_market_data(state: StrategyDevelopmentState) -> StrategyDevelopm
     1. Checks cache for existing data
     2. Fetches missing data from MCP
     3. Updates state with candle data
+    
+    Args:
+        state: Current workflow state
+        mcp_client: Optional MCP client instance (will use from state if not provided)
     """
     logger.info("Starting market data fetch")
+    strategy_logger.set_phase("DATA FETCHING")
+    strategy_logger.set_step("Market Data Collection")
     state["current_step"] = "fetch_market_data"
+    
+    # Get MCP client from state if not provided
+    if mcp_client is None:
+        mcp_client = state.get("mcp_client")
+        if mcp_client is None:
+            state["errors"].append("No MCP client available")
+            return state
     
     # Initialize cache
     cache = DataCache(cache_dir="./cache")
@@ -163,6 +168,7 @@ async def fetch_market_data(state: StrategyDevelopmentState) -> StrategyDevelopm
         
         for timeframe in state["timeframes"]:
             logger.info(f"Fetching {symbol} {timeframe}")
+            strategy_logger.log_progress(f"Fetching {symbol} {timeframe}", fetched + cached, total_combinations)
             
             # Check cache first
             cached_data = cache.get(symbol, timeframe, days=365)
@@ -176,7 +182,7 @@ async def fetch_market_data(state: StrategyDevelopmentState) -> StrategyDevelopm
                 logger.info(f"Downloading {symbol} {timeframe} from MCP")
                 
                 data = await fetch_candles_from_mcp(
-                    state["mcp_server_url"],
+                    mcp_client,
                     symbol,
                     timeframe,
                     days=365
@@ -187,6 +193,10 @@ async def fetch_market_data(state: StrategyDevelopmentState) -> StrategyDevelopm
                     cache.set(symbol, timeframe, days=365, data=data)
                     fetched += 1
                     logger.info(f"Successfully fetched {data['candle_count']} candles for {symbol} {timeframe}")
+                    strategy_logger.log_data(logging.INFO, f"Fetched {symbol} {timeframe}", {
+                        "candles": data['candle_count'],
+                        "cached": False
+                    })
                 else:
                     error_msg = f"Failed to fetch {symbol} {timeframe}"
                     fetch_errors.append(error_msg)
@@ -213,6 +223,16 @@ async def fetch_market_data(state: StrategyDevelopmentState) -> StrategyDevelopm
     
     # Log summary
     logger.info(f"Data fetch complete: {fetched} fetched, {cached} from cache, {len(fetch_errors)} errors")
+    strategy_logger.log_success(f"Data fetch completed", {
+        "fetched": fetched,
+        "cached": cached,
+        "errors": len(fetch_errors),
+        "total_candles": sum(
+            data.get("candle_count", 0)
+            for symbol_data in candle_data.values()
+            for data in symbol_data.values()
+        )
+    })
     
     # Validate we have enough data to continue
     total_candles = sum(

@@ -14,13 +14,16 @@ from .state import (
     should_continue_optimization,
     get_state_summary
 )
+from .mcp_client import FreqtradeMCPClient
 from .nodes.data_fetcher import fetch_market_data
 from .nodes.strategy_generator import generate_strategy_idea, create_strategy_code, rewrite_strategy
 from .nodes.hyperopt_runner import run_hyperopt
 from .nodes.result_analyzer import analyze_results, finalize_strategy, return_best_attempt
+from .logging_config import get_logger
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+strategy_logger = get_logger()
 
 
 class StrategyDevelopmentAgent:
@@ -30,27 +33,26 @@ class StrategyDevelopmentAgent:
     
     def __init__(
         self,
-        mcp_url: str = "http://localhost:8000",
         symbols: List[str] = None,
         timeframes: List[str] = None,
         max_iterations: int = 3,
         hyperopt_epochs: int = 100,
         min_profit_threshold: float = 5.0,
-        cache_dir: str = "./cache"
+        cache_dir: str = "./cache",
+        mcp_server_path: str = None
     ):
         """
         Initialize the strategy development agent
         
         Args:
-            mcp_url: URL of the MCP server
             symbols: List of trading pairs
             timeframes: List of timeframes
             max_iterations: Maximum strategy rewrite attempts
             hyperopt_epochs: Number of hyperopt epochs
             min_profit_threshold: Minimum profit percentage to consider strategy profitable
             cache_dir: Directory for caching data
+            mcp_server_path: Path to MCP server script (optional)
         """
-        self.mcp_url = mcp_url
         self.symbols = symbols or ["BTC/USDT:USDT", "ETH/USDT:USDT", "SOL/USDT:USDT"]
         self.timeframes = timeframes or ["1h", "4h"]
         self.max_iterations = max_iterations
@@ -58,11 +60,19 @@ class StrategyDevelopmentAgent:
         self.min_profit_threshold = min_profit_threshold
         self.cache_dir = cache_dir
         
+        # Initialize MCP client
+        from pathlib import Path
+        if mcp_server_path:
+            server_path = Path(mcp_server_path)
+        else:
+            server_path = None
+        self.mcp_client = FreqtradeMCPClient(server_path)
+        
+        # Memory for checkpointing - must be initialized before building graph
+        self.memory = MemorySaver()
+        
         # Initialize the graph
         self.graph = self._build_graph()
-        
-        # Memory for checkpointing
-        self.memory = MemorySaver()
     
     def _build_graph(self) -> StateGraph:
         """Build the LangGraph workflow"""
@@ -70,11 +80,18 @@ class StrategyDevelopmentAgent:
         # Create the graph
         workflow = StateGraph(StrategyDevelopmentState)
         
+        # Create wrapper functions that inject MCP client
+        async def fetch_market_data_wrapper(state):
+            return await fetch_market_data(state, self.mcp_client)
+        
+        async def run_hyperopt_wrapper(state):
+            return await run_hyperopt(state, self.mcp_client)
+        
         # Add nodes
-        workflow.add_node("fetch_market_data", fetch_market_data)
+        workflow.add_node("fetch_market_data", fetch_market_data_wrapper)
         workflow.add_node("generate_strategy_idea", generate_strategy_idea)
         workflow.add_node("create_strategy_code", create_strategy_code)
-        workflow.add_node("run_hyperopt", run_hyperopt)
+        workflow.add_node("run_hyperopt", run_hyperopt_wrapper)
         workflow.add_node("analyze_results", analyze_results)
         workflow.add_node("rewrite_strategy", rewrite_strategy)
         workflow.add_node("finalize_strategy", finalize_strategy)
@@ -123,15 +140,19 @@ class StrategyDevelopmentAgent:
             Dictionary with results including strategy name, code, and metrics
         """
         logger.info("Starting strategy development workflow")
+        strategy_logger.set_phase("WORKFLOW INITIALIZATION")
+        strategy_logger.log_progress(f"Starting strategy development for {len(self.symbols)} symbols")
         
         # Create initial state
         initial_state = create_initial_state(
             symbols=self.symbols,
             timeframes=self.timeframes,
-            mcp_server_url=self.mcp_url,
             max_iterations=self.max_iterations,
             hyperopt_epochs=self.hyperopt_epochs
         )
+        
+        # Don't add MCP client to state - it's not serializable
+        # Nodes will get it through the wrapper functions
         
         # Configuration for the run
         config = {
@@ -142,32 +163,50 @@ class StrategyDevelopmentAgent:
         }
         
         try:
-            # Run the workflow
-            final_state = None
-            async for event in self.graph.astream(initial_state, config):
-                # Log progress
-                for node_name, node_state in event.items():
-                    logger.info(f"Completed node: {node_name}")
-                    if isinstance(node_state, dict):
-                        summary = get_state_summary(node_state)
-                        logger.info(f"State summary: {summary}")
-                        final_state = node_state
-            
-            # Process final results
-            if final_state:
-                return self._prepare_results(final_state)
-            else:
-                return {
-                    "success": False,
-                    "error": "Workflow completed without final state"
-                }
+            # Start MCP client
+            async with self.mcp_client:
+                logger.info("MCP client connected, starting workflow")
+                
+                # Run the workflow
+                final_state = None
+                strategy_logger.set_phase("WORKFLOW EXECUTION")
+                
+                async for event in self.graph.astream(initial_state, config):
+                    # Log progress
+                    for node_name, node_state in event.items():
+                        strategy_logger.set_step(node_name)
+                        strategy_logger.log_progress(f"Executing node: {node_name}")
+                        
+                        logger.info(f"Completed node: {node_name}")
+                        if isinstance(node_state, dict):
+                            summary = get_state_summary(node_state)
+                            logger.info(f"State summary: {summary}")
+                            
+                            # Log detailed progress
+                            if node_state.get("errors"):
+                                strategy_logger.log_data(logging.WARNING, "Errors in state", {
+                                    "errors": node_state["errors"][-5:]  # Last 5 errors
+                                })
+                            
+                            final_state = node_state
+                
+                # Process final results
+                if final_state:
+                    return self._prepare_results(final_state)
+                else:
+                    return {
+                        "success": False,
+                        "error": "Workflow completed without final state"
+                    }
                 
         except Exception as e:
             logger.error(f"Error in strategy development: {str(e)}")
             return {
                 "success": False,
                 "error": str(e),
-                "session_id": initial_state["session_id"]
+                "session_id": initial_state["session_id"],
+                "iterations": 0,
+                "duration_minutes": 0
             }
     
     def _prepare_results(self, state: StrategyDevelopmentState) -> Dict[str, Any]:
@@ -218,17 +257,20 @@ class StrategyDevelopmentAgent:
             })
         return checkpoints
     
-    def validate_connection(self) -> bool:
+    async def validate_connection(self) -> bool:
         """Validate MCP server connection"""
-        # This would be implemented with actual MCP connection test
-        # For now, return True as placeholder
-        return True
+        try:
+            async with self.mcp_client:
+                logger.info("MCP connection validation successful")
+                return True
+        except Exception as e:
+            logger.error(f"MCP connection validation failed: {e}")
+            return False
 
 
 async def main():
     """Example usage"""
     agent = StrategyDevelopmentAgent(
-        mcp_url="http://localhost:8000",
         symbols=["BTC/USDT:USDT"],
         timeframes=["1h"],
         max_iterations=2,
@@ -236,7 +278,7 @@ async def main():
     )
     
     # Check connection
-    if not agent.validate_connection():
+    if not await agent.validate_connection():
         logger.error("Failed to connect to MCP server")
         return
     

@@ -5,8 +5,6 @@ import logging
 import json
 from typing import Dict, Any
 from datetime import datetime
-import instructor
-from openai import AsyncOpenAI
 
 from ..state import (
     StrategyDevelopmentState,
@@ -15,11 +13,23 @@ from ..state import (
     update_state_metrics
 )
 from ..prompts.analysis_prompts import STRATEGY_ANALYSIS_PROMPT
+from ..llm_client import create_llm_client, LLMConfig
+from ..config import config
+from ..logging_config import get_logger
 
 logger = logging.getLogger(__name__)
+strategy_logger = get_logger()
 
-# Initialize Instructor
-client = instructor.from_openai(AsyncOpenAI())
+
+def _get_analysis_client():
+    """Get LLM client for result analysis"""
+    try:
+        llm_config_dict = config.get_llm_config()
+        llm_config = LLMConfig(**llm_config_dict)
+        return create_llm_client(llm_config)
+    except Exception as e:
+        logger.error(f"Failed to create LLM client for analysis: {e}")
+        raise
 
 
 async def analyze_results(state: StrategyDevelopmentState) -> StrategyDevelopmentState:
@@ -27,11 +37,20 @@ async def analyze_results(state: StrategyDevelopmentState) -> StrategyDevelopmen
     Node: Analyze backtest and hyperopt results
     """
     logger.info("Analyzing strategy results")
+    strategy_logger.set_phase("RESULTS ANALYSIS")
+    strategy_logger.set_step("Performance Evaluation")
     state["current_step"] = "analyze_results"
     
     # First run backtest with optimized parameters
     from .hyperopt_runner import run_backtest_with_params
-    backtest_results = await run_backtest_with_params(state)
+    
+    # Get MCP client from state
+    mcp_client = state.get("mcp_client")
+    if mcp_client is None:
+        state["errors"].append("No MCP client available for backtest")
+        return state
+    
+    backtest_results = await run_backtest_with_params(state, mcp_client)
     
     if backtest_results and backtest_results.get("success"):
         state["backtest_results"] = backtest_results
@@ -58,9 +77,8 @@ async def analyze_results(state: StrategyDevelopmentState) -> StrategyDevelopmen
     # Analyze with LLM
     try:
         if state["performance_metrics"]:
-            analysis = await client.chat.completions.create(
-                model="gpt-4o-mini",
-                response_model=StrategyAnalysis,
+            llm_client = _get_analysis_client()
+            analysis = await llm_client.create_completion(
                 messages=[
                     {
                         "role": "system",
@@ -81,6 +99,7 @@ async def analyze_results(state: StrategyDevelopmentState) -> StrategyDevelopmen
                         )
                     }
                 ],
+                response_model=StrategyAnalysis,
                 temperature=0.3
             )
             

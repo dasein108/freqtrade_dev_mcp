@@ -41,6 +41,7 @@ try:
     )
     from .utils.date_parser import parse_natural_date
     from .utils.logger import setup_logging
+    from .logging_config import setup_mcp_logging, MCPLogger
 except ImportError:
     # Absolute imports for direct script execution
     from config import Config, load_config
@@ -60,6 +61,7 @@ except ImportError:
     )
     from utils.date_parser import parse_natural_date
     from utils.logger import setup_logging
+    from logging_config import setup_mcp_logging, MCPLogger
 
 logger = logging.getLogger(__name__)
 
@@ -70,10 +72,20 @@ class FreqtradeMCPServer:
     def __init__(self, config: Optional[Config] = None):
         """Initialize the Freqtrade MCP server."""
         try:
+            # Setup enhanced logging first
+            log_file = setup_mcp_logging(log_level=logging.INFO, log_to_file=True)
+            self.mcp_logger = MCPLogger("freqtrade-mcp")
+            
+            logger.info("Initializing Freqtrade MCP Server")
+            if log_file:
+                logger.info(f"Detailed logs: {log_file}")
+            
             self.config = config or load_config()
             self.server = Server("freqtrade-mcp")
             self.commands = self._initialize_commands()
             self._setup_handlers()
+            
+            logger.info("MCP Server initialized successfully")
         except Exception as e:
             print(f"Server initialization failed: {e}", file=sys.stderr)
             import traceback
@@ -168,6 +180,11 @@ class FreqtradeMCPServer:
                             "type": "string",
                             "description": "Exchange name (default: binance)",
                             "default": "binance"
+                        },
+                        "trading_mode": {
+                            "type": "string",
+                            "enum": ["spot", "futures"],
+                            "description": "Trading mode (auto-detected from pairs if not specified)"
                         }
                     },
                     "required": ["pairs", "timeframes", "date_range"]
@@ -642,19 +659,43 @@ class FreqtradeMCPServer:
         @self.server.call_tool()
         async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
             """Execute a tool with given arguments."""
+            # Log tool call start
+            self.mcp_logger.log_tool_call(name, arguments)
+            start_time = asyncio.get_event_loop().time()
+            
             try:
                 if name not in self.commands:
                     error_result = {
                         "error": f"Unknown tool: {name}",
-                        "success": False
+                        "success": False,
+                        "available_tools": list(self.commands.keys())
                     }
+                    self.mcp_logger.log_tool_result(name, error_result, success=False)
+                    
                     return [TextContent(
                         type="text",
                         text=json.dumps(error_result, indent=2)
                     )]
                 
+                logger.info(f"Executing tool: {name} with args: {json.dumps(arguments, indent=2)}")
+                
                 command = self.commands[name]
                 result = await command.execute(**arguments)
+                
+                # Calculate execution time
+                execution_time = asyncio.get_event_loop().time() - start_time
+                
+                # Add metadata to result
+                if isinstance(result, dict):
+                    from datetime import datetime
+                    result["_metadata"] = {
+                        "tool": name,
+                        "execution_time_seconds": round(execution_time, 3),
+                        "timestamp": datetime.now().isoformat()
+                    }
+                
+                logger.info(f"Tool {name} completed successfully in {execution_time:.3f}s")
+                self.mcp_logger.log_tool_result(name, result, success=True)
                 
                 return [TextContent(
                     type="text",
@@ -662,12 +703,25 @@ class FreqtradeMCPServer:
                 )]
                 
             except Exception as e:
-                logger.error(f"Error executing tool {name}: {e}", exc_info=True)
+                execution_time = asyncio.get_event_loop().time() - start_time
+                
+                import traceback
+                error_trace = traceback.format_exc()
+                
+                logger.error(f"Error executing tool {name} after {execution_time:.3f}s: {e}")
+                logger.error(f"Traceback: {error_trace}")
+                
                 error_result = {
                     "error": str(e),
                     "success": False,
-                    "tool": name
+                    "tool": name,
+                    "execution_time_seconds": round(execution_time, 3),
+                    "arguments": arguments,
+                    "traceback": error_trace
                 }
+                
+                self.mcp_logger.log_tool_result(name, error_result, success=False)
+                
                 return [TextContent(
                     type="text",
                     text=json.dumps(error_result, indent=2)
@@ -710,6 +764,7 @@ class FreqtradeMCPServer:
         logging.getLogger("websockets").setLevel(logging.WARNING)
         
         logger.info(f"Starting Freqtrade MCP Server (logs: {log_file})")
+        logger.info(f"Enhanced logs: logs/mcp_server_*.log")
         
         async with stdio_server() as (read_stream, write_stream):
             await self.server.run(
