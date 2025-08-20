@@ -1,0 +1,13 @@
+
+================================================================================
+MCP Server Started: 2025-08-19T15:01:31.931995
+================================================================================
+
+2025-08-19 15:01:31,932 - src.logging_config - INFO - [logging_config.py:113] - MCP Server logging initialized
+2025-08-19 15:01:31,932 - src.logging_config - INFO - [logging_config.py:115] - Log file: logs/mcp_server_20250819_150131.log
+2025-08-19 15:01:31,932 - src.server - INFO - [server.py:79] - Initializing Freqtrade MCP Server
+2025-08-19 15:01:31,932 - src.server - INFO - [server.py:81] - Detailed logs: logs/mcp_server_20250819_150131.log
+2025-08-19 15:01:31,932 - mcp.server.lowlevel.server - DEBUG - [server.py:153] - Initializing server 'freqtrade-mcp'
+2025-08-19 15:01:31,933 - mcp.server.lowlevel.server - DEBUG - [server.py:385] - Registering handler for ListToolsRequest
+2025-08-19 15:01:31,933 - mcp.server.lowlevel.server - DEBUG - [server.py:446] - Registering handler for CallToolRequest
+2025-08-19 15:01:31,933 - src.server - INFO - [server.py:88] - MCP Server initialized successfully

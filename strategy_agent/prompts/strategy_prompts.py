@@ -28,7 +28,8 @@ Provide a strategy that is different from common strategies, with your own creat
 STRATEGY_CODE_PROMPT = """
 Create a complete Freqtrade strategy implementation with the following specifications:
 
-Strategy Name: {strategy_name}
+IMPORTANT: The Python class name MUST be exactly: {strategy_name}
+
 Description: {idea_description}
 Indicators: {indicators}
 Entry Logic: {entry_logic}
@@ -38,7 +39,7 @@ Preferred Timeframe: {timeframe}
 
 Requirements:
 1. Implement all necessary imports
-2. Create a class inheriting from IStrategy
+2. Create a class named EXACTLY "{strategy_name}" inheriting from IStrategy
 3. Define all indicators in populate_indicators()
 4. Implement buy signals in populate_entry_trend()
 5. Implement sell signals in populate_exit_trend()
@@ -61,6 +62,8 @@ Generate the complete Python code for this strategy.
 STRATEGY_REWRITE_PROMPT = """
 Improve the following trading strategy based on performance analysis:
 
+IMPORTANT: The Python class name MUST remain exactly: {strategy_name}
+
 Original Strategy Code:
 ```python
 {original_code}
@@ -74,7 +77,7 @@ Performance Analysis:
 Current Metrics:
 {metrics}
 
-Rewrite the strategy to address the identified weaknesses. Focus on:
+Rewrite the strategy to address the identified weaknesses while keeping the class name as "{strategy_name}". Focus on:
 
 1. If low profit: Adjust entry/exit logic for better trade timing
 2. If high drawdown: Improve stoploss and risk management

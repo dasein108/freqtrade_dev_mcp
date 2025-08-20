@@ -171,9 +171,17 @@ class HyperoptStrategyCommand(BaseCommand):
             "--strategy", strategy_name,
             "--timerange", timerange,
             "--epochs", str(epochs),
-            "--spaces", spaces,
             "--hyperopt-loss", loss_function,
         ]
+        
+        # Handle spaces parameter - split comma-separated values
+        if spaces:
+            if ',' in spaces:
+                # Split comma-separated spaces and add as separate arguments
+                space_list = [s.strip() for s in spaces.split(',')]
+                args.extend(["--spaces"] + space_list)
+            else:
+                args.extend(["--spaces", spaces])
 
         # Add pairs
         if pairs:
@@ -200,11 +208,21 @@ class HyperoptStrategyCommand(BaseCommand):
         
         # Build configuration for freqtrade
         config = self.get_freqtrade_config()
+        
+        # Handle spaces parameter - convert comma-separated string to list
+        if spaces:
+            if ',' in spaces:
+                space_list = [s.strip() for s in spaces.split(',')]
+            else:
+                space_list = [spaces]
+        else:
+            space_list = ["all"]
+        
         config.update({
             'strategy': strategy_name,
             'timerange': timerange,
             'epochs': epochs,
-            'spaces': [spaces] if spaces != "all" else ["all"],
+            'spaces': space_list,
             'hyperopt_loss': loss_function,
             'hyperopt_jobs': 1,
             'datadir': str(self.config.full_data_dir),

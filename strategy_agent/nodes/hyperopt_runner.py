@@ -261,5 +261,9 @@ async def run_backtest_with_params(
         return None
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         logger.error(f"Error running backtest: {str(e)}")
+        logger.debug(f"Traceback: {error_trace}")
+        strategy_logger.log_error(f"Failed to run backtest with optimized parameters", e, error_trace)
         return None

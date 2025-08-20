@@ -120,6 +120,135 @@ async def fetch_candles(symbols, timeframe, days=365):
     pass
 ```
 
+#### **Data Schema Standards (Mandatory)**
+
+**ALL data structures MUST use Pydantic models instead of raw dictionaries** for type safety, validation, and schema consistency between MCP server and client.
+
+##### **Pydantic Model Requirements**
+```python
+# ✅ Good - Strict Pydantic models with validation
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
+
+class CandleData(BaseModel):
+    """Structured candle data model."""
+    symbol: str = Field(..., description="Trading pair symbol")
+    timeframe: str = Field(..., description="Candle timeframe")
+    data: Dict[str, Dict[str, float]] = Field(..., description="OHLCV data")
+    candle_count: int = Field(default=0, description="Number of candles")
+    
+    class Config:
+        extra = "forbid"  # Strict - no extra fields allowed
+
+class MCPResponse(BaseModel):
+    """Base response model for MCP operations."""
+    command: str = Field(..., description="MCP command executed")
+    success: bool = Field(..., description="Operation success status")
+    error: Optional[str] = Field(None, description="Error message if failed")
+    duration_seconds: Optional[float] = Field(None, description="Execution time")
+    
+    class Config:
+        extra = "forbid"  # Prevent schema drift
+
+# ❌ Bad - Raw dictionaries without validation
+def process_candles() -> Dict[str, Any]:
+    return {
+        "symbol": "BTC/USDT",
+        "data": {...},  # No validation, type safety, or schema enforcement
+        "random_field": "this shouldn't be here"  # Schema drift
+    }
+```
+
+##### **Schema Consistency Rules**
+```python
+# ✅ Good - Consistent models across MCP boundary
+# Server side (src/commands/*)
+class DownloadCandlesResponse(MCPBaseResponse):
+    pairs: List[str] = Field(..., description="Downloaded pairs")
+    cache_files: List[CacheFileInfo] = Field(default_factory=list)
+    total_candles: int = Field(default=0)
+
+# Client side (strategy_agent/*)
+from src.models.base_models import DownloadCandlesResponse
+
+async def call_mcp_tool(self) -> DownloadCandlesResponse:
+    result = await self.mcp_client.download_candles(...)
+    return DownloadCandlesResponse(**result)  # Validated response
+
+# ❌ Bad - Inconsistent schemas
+# Server returns: {"command": "download", "success": True, "files": [...]}
+# Client expects: {"tool": "download", "ok": True, "cache_files": [...]}
+```
+
+##### **Validation and Error Handling**
+```python
+# ✅ Good - Proper validation with clear error messages
+from pydantic import ValidationError
+
+def process_response(raw_data: Dict[str, Any]) -> MCPResponse:
+    try:
+        return MCPResponse(**raw_data)
+    except ValidationError as e:
+        logger.error(f"Schema validation failed: {e}")
+        return create_error_response(
+            command="unknown",
+            error=f"Invalid response format: {e}"
+        )
+
+# ❌ Bad - No validation, silent failures
+def process_response(raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    return raw_data  # Anything goes, no type safety
+```
+
+##### **Model Organization Standards**
+```python
+# ✅ Good - Centralized models in src/models/base_models.py
+from src.models.base_models import (
+    MCPBaseResponse,
+    CacheFileInfo,
+    CandleData,
+    DownloadCandlesResponse,
+    ReadCandlesResponse
+)
+
+# All models inherit from base classes
+# Strict field validation with Field(...) 
+# Consistent naming and structure
+# Shared across server and client
+
+# ❌ Bad - Scattered, inconsistent models
+# Different models in each file
+# No inheritance or consistency
+# Raw dicts mixed with models
+```
+
+##### **Utility Functions**
+```python
+# ✅ Good - Helper functions for consistent responses
+def create_error_response(command: str, error: str, duration: float = None) -> MCPBaseResponse:
+    """Create standardized error response."""
+    return MCPBaseResponse(
+        command=command,
+        success=False,
+        error=error,
+        duration_seconds=duration
+    )
+
+def create_success_response(command: str, duration: float = None) -> MCPBaseResponse:
+    """Create standardized success response."""
+    return MCPBaseResponse(
+        command=command,
+        success=True,
+        duration_seconds=duration
+    )
+
+# Usage in commands:
+return create_error_response("download_candles", str(e)).dict()
+
+# ❌ Bad - Inconsistent manual dict creation
+return {"error": True, "msg": str(e), "cmd": "download"}  # Inconsistent fields
+```
+
 ## Project Structure Rules
 
 ### Directory Organization

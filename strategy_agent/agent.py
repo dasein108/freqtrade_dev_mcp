@@ -184,7 +184,28 @@ class StrategyDevelopmentAgent:
                             
                             # Log detailed progress
                             if node_state.get("errors"):
-                                strategy_logger.log_data(logging.WARNING, "Errors in state", {
+                                # Log each new error individually for better visibility
+                                current_error_count = len(node_state["errors"])
+                                if hasattr(final_state, '__len__') and final_state.get("errors"):
+                                    previous_error_count = len(final_state.get("errors", []))
+                                else:
+                                    previous_error_count = 0
+                                
+                                # Log new errors
+                                if current_error_count > previous_error_count:
+                                    new_errors = node_state["errors"][previous_error_count:]
+                                    for error in new_errors:
+                                        logger.warning(f"NEW ERROR in {node_name}: {error}")
+                                        
+                                # Create a descriptive error message
+                                error_summary = f"Errors in state - {current_error_count} total error(s)"
+                                if node_state["errors"]:
+                                    # Include the most recent error in the message
+                                    error_summary = f"Errors in state - Latest: {node_state['errors'][-1][:100]}..."
+                                
+                                strategy_logger.log_data(logging.WARNING, error_summary, {
+                                    "node": node_name,
+                                    "total_errors": current_error_count,
                                     "errors": node_state["errors"][-5:]  # Last 5 errors
                                 })
                             

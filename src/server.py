@@ -158,7 +158,7 @@ class FreqtradeMCPServer:
             
             tools.append(Tool(
                 name="download_candles",
-                description="Download historical candle data for specified pairs and timeframes",
+                description="Download historical candle data and return cache filenames (format: symbol-tf-timerange.json)",
                 inputSchema={
                     "type": "object",
                     "properties": {

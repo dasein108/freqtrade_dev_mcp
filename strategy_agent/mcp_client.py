@@ -6,10 +6,19 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Union
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from pydantic import ValidationError
+
+# Import Pydantic models for response validation
+from .models import (
+    DownloadCandlesResponse,
+    BacktestResponse,
+    HyperoptResponse,
+    MCPResponse
+)
 
 logger = logging.getLogger(__name__)
 
@@ -138,21 +147,76 @@ class FreqtradeMCPClient:
             result = await self.session.call_tool(tool_name, arguments)
             
             # Parse the result
-            if result.content:
+            if result and result.content:
                 # Extract text content from the result
                 for content in result.content:
                     if hasattr(content, 'text'):
                         # Parse JSON response if possible
                         try:
-                            return json.loads(content.text)
+                            parsed_result = json.loads(content.text)
+                            logger.debug(f"Tool {tool_name} returned: {parsed_result}")
+                            
+                            # Optionally validate with Pydantic models
+                            validated_result = self._validate_response(tool_name, parsed_result)
+                            return validated_result if validated_result else parsed_result
+                            
                         except json.JSONDecodeError:
-                            return {"result": content.text}
+                            logger.warning(f"Tool {tool_name} returned non-JSON content: {content.text[:200]}")
+                            return {"success": False, "error": f"Invalid JSON response", "raw_content": content.text}
             
-            return {"success": False, "error": "No content in response"}
+            logger.warning(f"Tool {tool_name} returned no content or empty result")
+            return {"success": False, "error": "No content in response", "raw_result": str(result)}
             
         except Exception as e:
-            logger.error(f"Tool call failed: {e}")
-            return {"success": False, "error": str(e)}
+            import traceback
+            error_trace = traceback.format_exc()
+            logger.error(f"Tool call {tool_name} failed: {e}")
+            logger.debug(f"Full traceback: {error_trace}")
+            return {"success": False, "error": str(e), "error_type": type(e).__name__, "traceback": error_trace}
+    
+    def _validate_response(self, tool_name: str, response_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Validate MCP response using appropriate Pydantic model.
+        
+        Args:
+            tool_name: Name of the tool that generated the response
+            response_data: Raw response data
+            
+        Returns:
+            Validated response data or None if validation fails
+        """
+        try:
+            # Map tool names to their response models
+            model_mapping = {
+                "download_candles": DownloadCandlesResponse,
+                "backtest_strategy": BacktestResponse,
+                "hyperopt_strategy": HyperoptResponse,
+                # Add more mappings as needed
+            }
+            
+            model_class = model_mapping.get(tool_name)
+            if not model_class:
+                # No specific model for this tool, use generic validation
+                try:
+                    MCPResponse(**response_data)
+                    logger.debug(f"Generic MCP response validation passed for {tool_name}")
+                except ValidationError as e:
+                    logger.warning(f"Generic MCP response validation failed for {tool_name}: {e}")
+                return None
+            
+            # Validate with specific model
+            validated_response = model_class(**response_data)
+            logger.debug(f"Response validation passed for {tool_name}")
+            return validated_response.dict()
+            
+        except ValidationError as e:
+            logger.warning(f"Response validation failed for {tool_name}: {e}")
+            logger.debug(f"Raw response data: {response_data}")
+            # Return None to use original response
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error during response validation for {tool_name}: {e}")
+            return None
     
     async def download_candles(
         self,
@@ -160,7 +224,7 @@ class FreqtradeMCPClient:
         timeframe: str,
         days: int = 365,
         exchange: str = "binance"
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], DownloadCandlesResponse]:
         """
         Download candle data
         
@@ -339,7 +403,6 @@ class FreqtradeMCPClient:
             params["max_trials"] = max_trials
         
         return await self.call_tool("extract_hyperopt_data", params)
-    
     async def list_results(
         self,
         result_type: str = "backtest",

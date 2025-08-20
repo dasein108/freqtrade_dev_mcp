@@ -1,0 +1,10 @@
+{"timestamp": "2025-08-20T09:06:18.651184", "level": "INFO", "logger": "src.logging_config", "message": "MCP Server logging initialized", "module": "logging_config", "function": "setup_mcp_logging", "line": 113}
+{"timestamp": "2025-08-20T09:06:18.652047", "level": "INFO", "logger": "src.logging_config", "message": "Log file: logs/mcp_server_20250820_090618.log", "module": "logging_config", "function": "setup_mcp_logging", "line": 115}
+{"timestamp": "2025-08-20T09:06:18.652941", "level": "INFO", "logger": "src.server", "message": "Initializing Freqtrade MCP Server", "module": "server", "function": "__init__", "line": 79}
+{"timestamp": "2025-08-20T09:06:18.653698", "level": "INFO", "logger": "src.server", "message": "Detailed logs: logs/mcp_server_20250820_090618.log", "module": "server", "function": "__init__", "line": 81}
+{"timestamp": "2025-08-20T09:06:18.655506", "level": "DEBUG", "logger": "mcp.server.lowlevel.server", "message": "Initializing server 'freqtrade-mcp'", "module": "server", "function": "__init__", "line": 153}
+{"timestamp": "2025-08-20T09:06:18.657281", "level": "DEBUG", "logger": "mcp.server.lowlevel.server", "message": "Registering handler for ListToolsRequest", "module": "server", "function": "decorator", "line": 385}
+{"timestamp": "2025-08-20T09:06:18.658181", "level": "DEBUG", "logger": "mcp.server.lowlevel.server", "message": "Registering handler for CallToolRequest", "module": "server", "function": "decorator", "line": 446}
+{"timestamp": "2025-08-20T09:06:18.658949", "level": "INFO", "logger": "src.server", "message": "MCP Server initialized successfully", "module": "server", "function": "__init__", "line": 88}
+{"timestamp": "2025-08-20T09:06:18.662100", "level": "DEBUG", "logger": "asyncio", "message": "Using selector: KqueueSelector", "module": "selector_events", "function": "__init__", "line": 64}
+{"timestamp": "2025-08-20T09:06:18.664227", "level": "DEBUG", "logger": "asyncio", "message": "Using selector: KqueueSelector", "module": "selector_events", "function": "__init__", "line": 64}

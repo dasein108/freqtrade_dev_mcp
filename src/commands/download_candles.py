@@ -1,7 +1,14 @@
 """Download candles command implementation."""
 
+import json
 import logging
 from typing import Any, Dict, List, Union
+
+from ..models.base_models import (
+    DownloadCandlesResponse,
+    CacheFileInfo,
+    create_error_response
+)
 
 try:
     from .base import BaseCommand, FREQTRADE_AVAILABLE
@@ -94,37 +101,36 @@ class DownloadCandlesCommand(BaseCommand):
                 )
                 results.append(result)
 
-            # Compile final result
-            successful_downloads = [r for r in results if r["success"]]
-            failed_downloads = [r for r in results if not r["success"]]
+            # Collect all cache files and count total candles
+            all_cache_files = []
+            total_candles = 0
+            
+            for result in results:
+                if result.get("success"):
+                    cache_files = result.get("cache_files", [])
+                    all_cache_files.extend(cache_files)
+                    total_candles += result.get("candle_count", 0)
 
-            return {
-                "command": "download_candles",
-                "exchange": exchange,
-                "pairs": pairs_list,
-                "timeframes": timeframes_list,
-                "date_range": date_range,
-                "timerange": timerange,
-                "total_downloads": len(results),
-                "successful": len(successful_downloads),
-                "failed": len(failed_downloads),
-                "results": results,
-                "success": len(failed_downloads) == 0
-            }
+            # Create simplified response
+            response = DownloadCandlesResponse(
+                command="download_candles",
+                success=all(r.get("success", False) for r in results),
+                pairs=pairs_list,
+                timeframes=timeframes_list,
+                cache_files=all_cache_files,
+                total_candles=total_candles,
+                error=None if all(r.get("success", False) for r in results) else "Some downloads failed"
+            )
+            
+            return response.dict()
 
         except Exception as e:
-            logger.error(f"Download candles command failed: {e}", exc_info=True)
-            return {
-                "command": "download_candles",
-                "success": False,
-                "error": str(e),
-                "details": {
-                    "pairs": pairs,
-                    "timeframes": timeframes,
-                    "date_range": date_range,
-                    "exchange": exchange
-                }
-            }
+            logger.error(f"Download candles failed: {e}", exc_info=True)
+            error_response = create_error_response(
+                command="download_candles",
+                error=str(e)
+            )
+            return error_response.dict()
 
     async def _process_pairs(self, pairs: Union[List[str], str], exchange: str) -> List[str]:
         """Process pairs parameter into list of trading pairs."""
@@ -186,6 +192,12 @@ class DownloadCandlesCommand(BaseCommand):
         # Fallback to CLI mode
         return await self._download_using_cli(pairs, timeframe, timerange, exchange, trading_mode)
 
+    def _generate_cache_filename(self, pair: str, timeframe: str, timerange: str) -> str:
+        """Generate standardized cache filename with format: symbol-tf-timerange.json"""
+        # Clean pair name for filename (remove special characters)
+        clean_pair = pair.replace('/', '_').replace(':', '_')
+        return f"{clean_pair}-{timeframe}-{timerange}.json"
+    
     async def _download_using_package(
         self, 
         pairs: List[str], 
@@ -230,6 +242,8 @@ class DownloadCandlesCommand(BaseCommand):
             
             successful_pairs = []
             failed_pairs = []
+            cache_files = []
+            total_candles = 0
             
             for pair in pairs:
                 try:
@@ -245,6 +259,39 @@ class DownloadCandlesCommand(BaseCommand):
                         candle_type='spot'
                     )
                     successful_pairs.append(pair)
+                    
+                    # Check if file was created and get candle count
+                    original_file = self.config.full_data_dir / f"{pair.replace('/', '_').replace(':', '_')}-{timeframe}.json"
+                    cache_filename = self._generate_cache_filename(pair, timeframe, timerange)
+                    cache_file_path = self.config.full_data_dir / cache_filename
+                    
+                    if original_file.exists():
+                        # Rename to standardized cache filename
+                        if original_file != cache_file_path:
+                            original_file.rename(cache_file_path)
+                        
+                        # Count candles for metadata
+                        try:
+                            with open(cache_file_path, 'r') as f:
+                                pair_data = json.load(f)
+                                if isinstance(pair_data, list):
+                                    candle_count = len(pair_data)
+                                    total_candles += candle_count
+                                    await self.mcp_log("info", f"Cached {candle_count} candles for {pair} in {cache_filename}")
+                                else:
+                                    await self.mcp_log("warning", f"Unexpected data format in {cache_filename}")
+                        except Exception as e:
+                            await self.mcp_log("error", f"Failed to read cached file {cache_filename}: {e}")
+                        
+                        cache_files.append(CacheFileInfo(
+                            pair=pair,
+                            filename=cache_filename,
+                            full_path=str(cache_file_path),
+                            candle_count=candle_count if 'candle_count' in locals() else 0
+                        ))
+                    else:
+                        await self.mcp_log("warning", f"Expected data file not found: {original_file}")
+                    
                     await self.mcp_log("info", f"Successfully downloaded {pair} {timeframe} data")
                 except Exception as e:
                     failed_pairs.append((pair, str(e)))
@@ -258,7 +305,7 @@ class DownloadCandlesCommand(BaseCommand):
         output_lines = [f"Downloaded {len(successful_pairs)} pairs successfully"]
         if failed_pairs:
             output_lines.append(f"Failed to download {len(failed_pairs)} pairs")
-            
+
         return {
             "timeframe": timeframe,
             "pairs_count": len(pairs),
@@ -267,6 +314,8 @@ class DownloadCandlesCommand(BaseCommand):
             "failed_pairs": failed_pairs,
             "success": success,
             "returncode": 0 if success else 1,
+            "cache_files": cache_files,  # Return cache filenames instead of data
+            "candle_count": total_candles,  # Total candles across all files
             "output": "\n".join(output_lines),
             "error": None if success else f"Failed pairs: {[p[0] for p in failed_pairs]}"
         }
@@ -295,7 +344,8 @@ class DownloadCandlesCommand(BaseCommand):
                     "success": False,
                     "returncode": -1,
                     "output": "",
-                    "error": "freqtrade command not found in PATH. Please install freqtrade CLI or ensure it's accessible."
+                    "error": "freqtrade command not found in PATH. Please install freqtrade CLI or ensure it's accessible.",
+                    "cache_files": []
                 }
             else:
                 await self.mcp_log("info", f"Found freqtrade command at: {freqtrade_path}")
@@ -327,6 +377,49 @@ class DownloadCandlesCommand(BaseCommand):
         else:
             await self.mcp_log("info", "CLI download completed successfully")
         
+        # After downloading, process files and create cache filenames
+        cache_files = []
+        total_candles = 0
+        
+        if result["success"]:
+            try:
+                # Process downloaded files and rename to cache format
+                for pair in pairs:
+                    original_file = self.config.full_data_dir / f"{pair.replace('/', '_').replace(':', '_')}-{timeframe}.json"
+                    cache_filename = self._generate_cache_filename(pair, timeframe, timerange)
+                    cache_file_path = self.config.full_data_dir / cache_filename
+                    
+                    if original_file.exists():
+                        # Rename to standardized cache filename
+                        if original_file != cache_file_path:
+                            original_file.rename(cache_file_path)
+                        
+                        # Count candles for metadata
+                        try:
+                            with open(cache_file_path, 'r') as f:
+                                pair_data = json.load(f)
+                                if isinstance(pair_data, list):
+                                    candle_count = len(pair_data)
+                                    total_candles += candle_count
+                                    await self.mcp_log("info", f"Cached {candle_count} candles for {pair} in {cache_filename}")
+                                else:
+                                    candle_count = 0
+                                    await self.mcp_log("warning", f"Unexpected data format in {cache_filename}")
+                        except Exception as e:
+                            candle_count = 0
+                            await self.mcp_log("error", f"Failed to read cached file {cache_filename}: {e}")
+                        
+                        cache_files.append(CacheFileInfo(
+                            pair=pair,
+                            filename=cache_filename,
+                            full_path=str(cache_file_path),
+                            candle_count=candle_count
+                        ))
+                    else:
+                        await self.mcp_log("warning", f"Expected data file not found: {original_file}")
+            except Exception as e:
+                await self.mcp_log("error", f"Failed to process downloaded files: {e}")
+
         return {
             "timeframe": timeframe,
             "pairs_count": len(pairs),
@@ -334,5 +427,7 @@ class DownloadCandlesCommand(BaseCommand):
             "success": result["success"],
             "returncode": result["returncode"],
             "output": result["stdout"],
-            "error": result["stderr"] if not result["success"] else None
+            "error": result["stderr"] if not result["success"] else None,
+            "cache_files": cache_files,  # Return cache filenames instead of data
+            "candle_count": total_candles,  # Total candles across all files
         }

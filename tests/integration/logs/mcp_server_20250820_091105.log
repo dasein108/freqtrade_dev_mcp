@@ -1,0 +1,43 @@
+
+================================================================================
+MCP Server Started: 2025-08-20T09:11:05.756951
+================================================================================
+
+2025-08-20 09:11:05,758 - src.logging_config - INFO - [logging_config.py:113] - MCP Server logging initialized
+2025-08-20 09:11:05,759 - src.logging_config - INFO - [logging_config.py:115] - Log file: logs/mcp_server_20250820_091105.log
+2025-08-20 09:11:05,760 - src.server - INFO - [server.py:79] - Initializing Freqtrade MCP Server
+2025-08-20 09:11:05,761 - src.server - INFO - [server.py:81] - Detailed logs: logs/mcp_server_20250820_091105.log
+2025-08-20 09:11:05,763 - mcp.server.lowlevel.server - DEBUG - [server.py:153] - Initializing server 'freqtrade-mcp'
+2025-08-20 09:11:05,766 - mcp.server.lowlevel.server - DEBUG - [server.py:385] - Registering handler for ListToolsRequest
+2025-08-20 09:11:05,767 - mcp.server.lowlevel.server - DEBUG - [server.py:446] - Registering handler for CallToolRequest
+2025-08-20 09:11:05,768 - src.server - INFO - [server.py:88] - MCP Server initialized successfully
+2025-08-20 09:11:05,774 - asyncio - DEBUG - [selector_events.py:64] - Using selector: KqueueSelector
+2025-08-20 09:11:05,775 - asyncio - DEBUG - [selector_events.py:64] - Using selector: KqueueSelector
+
+================================================================================
+MCP Server Started: 2025-08-20T09:11:05.836803
+================================================================================
+
+2025-08-20 09:11:05,838 - src.logging_config - INFO - [logging_config.py:113] - MCP Server logging initialized
+2025-08-20 09:11:05,839 - src.logging_config - INFO - [logging_config.py:115] - Log file: logs/mcp_server_20250820_091105.log
+2025-08-20 09:11:05,840 - src.server - INFO - [server.py:79] - Initializing Freqtrade MCP Server
+2025-08-20 09:11:05,841 - src.server - INFO - [server.py:81] - Detailed logs: logs/mcp_server_20250820_091105.log
+2025-08-20 09:11:05,842 - mcp.server.lowlevel.server - DEBUG - [server.py:153] - Initializing server 'freqtrade-mcp'
+2025-08-20 09:11:05,844 - mcp.server.lowlevel.server - DEBUG - [server.py:385] - Registering handler for ListToolsRequest
+2025-08-20 09:11:05,845 - mcp.server.lowlevel.server - DEBUG - [server.py:446] - Registering handler for CallToolRequest
+2025-08-20 09:11:05,846 - src.server - INFO - [server.py:88] - MCP Server initialized successfully
+2025-08-20 09:11:05,850 - asyncio - DEBUG - [selector_events.py:64] - Using selector: KqueueSelector
+
+================================================================================
+MCP Server Started: 2025-08-20T09:11:05.904488
+================================================================================
+
+2025-08-20 09:11:05,905 - src.logging_config - INFO - [logging_config.py:113] - MCP Server logging initialized
+2025-08-20 09:11:05,906 - src.logging_config - INFO - [logging_config.py:115] - Log file: logs/mcp_server_20250820_091105.log
+2025-08-20 09:11:05,907 - src.server - INFO - [server.py:79] - Initializing Freqtrade MCP Server
+2025-08-20 09:11:05,909 - src.server - INFO - [server.py:81] - Detailed logs: logs/mcp_server_20250820_091105.log
+2025-08-20 09:11:05,910 - mcp.server.lowlevel.server - DEBUG - [server.py:153] - Initializing server 'freqtrade-mcp'
+2025-08-20 09:11:05,912 - mcp.server.lowlevel.server - DEBUG - [server.py:385] - Registering handler for ListToolsRequest
+2025-08-20 09:11:05,913 - mcp.server.lowlevel.server - DEBUG - [server.py:446] - Registering handler for CallToolRequest
+2025-08-20 09:11:05,914 - src.server - INFO - [server.py:88] - MCP Server initialized successfully
+2025-08-20 09:11:05,918 - asyncio - DEBUG - [selector_events.py:64] - Using selector: KqueueSelector

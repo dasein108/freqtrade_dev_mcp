@@ -5,9 +5,17 @@
       "Bash(python test:*)",
       "Bash(pip install:*)",
       "Bash(echo:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(timeout 10s python -m pytest:*)",
+      "Bash(touch:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/dasein/dev/freqtrade/user_data/strategies",
+      "/Users/dasein/dev/freqtrade"
+    ]
   }
 }

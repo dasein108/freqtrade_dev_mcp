@@ -63,9 +63,9 @@ class BaseCommand(ABC):
     def get_freqtrade_config(self) -> Dict[str, Any]:
         """Get basic freqtrade configuration."""
         config = {
-            "user_data_dir": str(self.config.freqtrade_path / "user_data"),
-            "strategy_path": [str(self.config.full_strategy_dir)],
-            "datadir": str(self.config.full_data_dir),
+            "user_data_dir": self.config.freqtrade_path / "user_data",
+            "strategy_path": str(self.config.full_strategy_dir),
+            "datadir": self.config.full_data_dir,
         }
         return config
 
@@ -75,9 +75,11 @@ class BaseCommand(ABC):
             try:
                 # Use freqtrade's strategy resolver
                 config = self.get_freqtrade_config()
-                StrategyResolver.load_strategy(config, strategy_name)
+                config["strategy"] = strategy_name  # Set strategy name in config
+                StrategyResolver.load_strategy(config)  # Load with just config
                 return True
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Strategy validation failed for '{strategy_name}': {e}")
                 return False
         else:
             # Fallback to file check
@@ -174,7 +176,7 @@ class BaseCommand(ABC):
             return {
                 "returncode": -1,
                 "stdout": "",
-                "stderr": "Command timed out",
+                "stderr": "timeout",
                 "success": False
             }
         except Exception as e:
@@ -276,15 +278,9 @@ class BaseCommand(ABC):
     def _analyze_command_success(self, returncode: int, stdout: str, stderr: str) -> bool:
         """Analyze command output to determine actual success state.
         
-        Simple rule: if stderr has content but stdout is empty, command failed.
+        For CLI tools, returncode 0 means success regardless of stderr content,
+        as many tools output logging/progress info to stderr during normal operation.
         """
-        # Exit code failure is definitive
-        if returncode != 0:
-            return False
-        
-        # Simple rule: stderr with content but no stdout = failure
-        if stderr.strip() and not stdout.strip():
-            return False
-        
-        # Otherwise, trust the exit code
-        return True
+        # Trust the exit code - returncode 0 means success
+        # Many CLI tools output progress/logging to stderr even when successful
+        return returncode == 0

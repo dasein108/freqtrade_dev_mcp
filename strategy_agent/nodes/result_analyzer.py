@@ -47,7 +47,9 @@ async def analyze_results(state: StrategyDevelopmentState) -> StrategyDevelopmen
     # Get MCP client from state
     mcp_client = state.get("mcp_client")
     if mcp_client is None:
-        state["errors"].append("No MCP client available for backtest")
+        error_msg = "No MCP client available for backtest"
+        state["errors"].append(error_msg)
+        strategy_logger.log_error(error_msg)
         return state
     
     backtest_results = await run_backtest_with_params(state, mcp_client)
@@ -113,11 +115,18 @@ async def analyze_results(state: StrategyDevelopmentState) -> StrategyDevelopmen
             state["is_profitable"] = analysis.is_profitable
             
         else:
-            state["errors"].append("No performance metrics available for analysis")
+            error_msg = "No performance metrics available for analysis"
+            state["errors"].append(error_msg)
+            strategy_logger.log_error(error_msg)
             state["is_profitable"] = False
             
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         logger.error(f"Error analyzing results: {str(e)}")
+        logger.debug(f"Traceback: {error_trace}")
+        
+        strategy_logger.log_error(f"Failed to analyze results", e, error_trace)
         state["errors"].append(f"Analysis error: {str(e)}")
         # Use metric-based profitability
         state["is_profitable"] = (
@@ -248,5 +257,10 @@ async def save_strategy_config(state: StrategyDevelopmentState):
             logger.info(f"Strategy config saved to {config_path}")
             
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         logger.error(f"Error saving strategy config: {str(e)}")
+        logger.debug(f"Traceback: {error_trace}")
+        
+        strategy_logger.log_error(f"Failed to save strategy config", e, error_trace)
         state["warnings"].append(f"Could not save strategy config: {str(e)}")

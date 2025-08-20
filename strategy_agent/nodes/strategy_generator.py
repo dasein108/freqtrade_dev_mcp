@@ -89,7 +89,10 @@ async def generate_strategy_idea(state: StrategyDevelopmentState) -> StrategyDev
         
         # Store idea in state
         state["strategy_idea"] = idea
-        state["strategy_name"] = f"AI_{idea.name}_{datetime.now().strftime('%Y%m%d_%H%M')}"
+        
+        # Create valid Python class name from idea name
+        class_name = create_valid_class_name(idea.name, datetime.now().strftime('%Y%m%d_%H%M'))
+        state["strategy_name"] = class_name
         
         strategy_logger.log_success("Strategy idea generated", {
             "name": idea.name,
@@ -123,7 +126,9 @@ async def create_strategy_code(state: StrategyDevelopmentState) -> StrategyDevel
     state["current_step"] = "create_strategy_code"
     
     if not state["strategy_idea"]:
-        state["errors"].append("No strategy idea available")
+        error_msg = "No strategy idea available"
+        state["errors"].append(error_msg)
+        strategy_logger.log_error(error_msg)
         return state
     
     try:
@@ -180,7 +185,12 @@ async def create_strategy_code(state: StrategyDevelopmentState) -> StrategyDevel
         logger.info(f"Strategy code created and saved to {strategy_path}")
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         logger.error(f"Error creating strategy code: {str(e)}")
+        logger.debug(f"Traceback: {error_trace}")
+        
+        strategy_logger.log_error(f"Failed to create strategy code", e, error_trace)
         state["errors"].append(f"Failed to create strategy code: {str(e)}")
         state["retry_count"] += 1
     
@@ -196,7 +206,9 @@ async def rewrite_strategy(state: StrategyDevelopmentState) -> StrategyDevelopme
     state["iteration_count"] += 1
     
     if not state["strategy_analysis"]:
-        state["errors"].append("No analysis available for rewrite")
+        error_msg = "No analysis available for rewrite"
+        state["errors"].append(error_msg)
+        strategy_logger.log_error(error_msg)
         return state
     
     try:
@@ -214,6 +226,7 @@ async def rewrite_strategy(state: StrategyDevelopmentState) -> StrategyDevelopme
                 {
                     "role": "user",
                     "content": STRATEGY_REWRITE_PROMPT.format(
+                        strategy_name=state["strategy_name"],
                         original_code=state["strategy_code"],
                         performance_rating=analysis.performance_rating,
                         weaknesses=", ".join(analysis.weaknesses),
@@ -237,7 +250,12 @@ async def rewrite_strategy(state: StrategyDevelopmentState) -> StrategyDevelopme
         
         # Update strategy name for new version
         version = state["iteration_count"] + 1
-        state["strategy_name"] = f"{state['strategy_name'].rsplit('_v', 1)[0]}_v{version}"
+        # Keep the original base name and add version
+        if '_v' in state["strategy_name"]:
+            base_name = state["strategy_name"].rsplit('_v', 1)[0]
+        else:
+            base_name = state["strategy_name"]
+        state["strategy_name"] = f"{base_name}_v{version}"
         
         # Save new version
         strategy_path = save_strategy_file(state["strategy_name"], improved_code)
@@ -256,7 +274,12 @@ async def rewrite_strategy(state: StrategyDevelopmentState) -> StrategyDevelopme
         logger.info(f"Strategy rewritten: {state['strategy_name']}")
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         logger.error(f"Error rewriting strategy: {str(e)}")
+        logger.debug(f"Traceback: {error_trace}")
+        
+        strategy_logger.log_error(f"Failed to rewrite strategy", e, error_trace)
         state["errors"].append(f"Failed to rewrite strategy: {str(e)}")
         state["retry_count"] += 1
     
@@ -295,6 +318,7 @@ def clean_strategy_code(code: str) -> str:
     # Ensure proper imports
     required_imports = [
         "from freqtrade.strategy import IStrategy",
+        "from typing import Optional",
         "import talib.abstract as ta",
         "import pandas as pd",
         "from pandas import DataFrame",
@@ -307,6 +331,43 @@ def clean_strategy_code(code: str) -> str:
             code = imp + "\n" + code
     
     return code.strip()
+
+
+def create_valid_class_name(idea_name: str, timestamp: str) -> str:
+    """
+    Create a valid Python class name from strategy idea name
+    
+    Args:
+        idea_name: Human-readable strategy name from LLM
+        timestamp: Timestamp string (e.g., '20250818_1126')
+        
+    Returns:
+        Valid Python class name
+    """
+    # Remove or replace invalid characters
+    # Replace spaces and hyphens with nothing, keep alphanumeric and underscores
+    clean_name = ""
+    for char in idea_name:
+        if char.isalnum():
+            clean_name += char
+        elif char in [' ', '-', '_']:
+            # Skip spaces and hyphens, but keep underscores
+            if char == '_':
+                clean_name += char
+    
+    # Ensure it starts with a letter
+    if clean_name and not clean_name[0].isalpha():
+        clean_name = "Strategy" + clean_name
+    
+    # Create final class name
+    class_name = f"AI_{clean_name}_{timestamp}"
+    
+    # Ensure it's a valid Python identifier
+    if not class_name.isidentifier():
+        # Fallback to safe name
+        class_name = f"AIStrategy_{timestamp}"
+    
+    return class_name
 
 
 def save_strategy_file(strategy_name: str, code: str) -> Path:

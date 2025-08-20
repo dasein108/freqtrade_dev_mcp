@@ -1,0 +1,72 @@
+
+================================================================================
+MCP Server Started: 2025-08-19T15:02:26.443840
+================================================================================
+
+2025-08-19 15:02:26,444 - src.logging_config - INFO - [logging_config.py:113] - MCP Server logging initialized
+2025-08-19 15:02:26,444 - src.logging_config - INFO - [logging_config.py:115] - Log file: logs/mcp_server_20250819_150226.log
+2025-08-19 15:02:26,444 - src.server - INFO - [server.py:79] - Initializing Freqtrade MCP Server
+2025-08-19 15:02:26,444 - src.server - INFO - [server.py:81] - Detailed logs: logs/mcp_server_20250819_150226.log
+2025-08-19 15:02:26,444 - mcp.server.lowlevel.server - DEBUG - [server.py:153] - Initializing server 'freqtrade-mcp'
+2025-08-19 15:02:26,445 - mcp.server.lowlevel.server - DEBUG - [server.py:385] - Registering handler for ListToolsRequest
+2025-08-19 15:02:26,445 - mcp.server.lowlevel.server - DEBUG - [server.py:446] - Registering handler for CallToolRequest
+2025-08-19 15:02:26,445 - src.server - INFO - [server.py:88] - MCP Server initialized successfully
+
+================================================================================
+MCP Server Started: 2025-08-19T15:02:26.449384
+================================================================================
+
+2025-08-19 15:02:26,449 - src.logging_config - INFO - [logging_config.py:113] - MCP Server logging initialized
+2025-08-19 15:02:26,450 - src.logging_config - INFO - [logging_config.py:115] - Log file: logs/mcp_server_20250819_150226.log
+2025-08-19 15:02:26,450 - src.server - INFO - [server.py:79] - Initializing Freqtrade MCP Server
+2025-08-19 15:02:26,450 - src.server - INFO - [server.py:81] - Detailed logs: logs/mcp_server_20250819_150226.log
+2025-08-19 15:02:26,450 - mcp.server.lowlevel.server - DEBUG - [server.py:153] - Initializing server 'freqtrade-mcp'
+2025-08-19 15:02:26,450 - mcp.server.lowlevel.server - DEBUG - [server.py:385] - Registering handler for ListToolsRequest
+2025-08-19 15:02:26,450 - mcp.server.lowlevel.server - DEBUG - [server.py:446] - Registering handler for CallToolRequest
+2025-08-19 15:02:26,450 - src.server - INFO - [server.py:88] - MCP Server initialized successfully
+2025-08-19 15:02:26,453 - asyncio - DEBUG - [selector_events.py:64] - Using selector: KqueueSelector
+2025-08-19 15:02:26,453 - asyncio - DEBUG - [selector_events.py:64] - Using selector: KqueueSelector
+
+================================================================================
+MCP Server Started: 2025-08-19T15:02:26.455332
+================================================================================
+
+2025-08-19 15:02:26,455 - src.logging_config - INFO - [logging_config.py:113] - MCP Server logging initialized
+2025-08-19 15:02:26,455 - src.logging_config - INFO - [logging_config.py:115] - Log file: logs/mcp_server_20250819_150226.log
+2025-08-19 15:02:26,455 - src.server - INFO - [server.py:79] - Initializing Freqtrade MCP Server
+2025-08-19 15:02:26,455 - src.server - INFO - [server.py:81] - Detailed logs: logs/mcp_server_20250819_150226.log
+2025-08-19 15:02:26,455 - mcp.server.lowlevel.server - DEBUG - [server.py:153] - Initializing server 'freqtrade-mcp'
+2025-08-19 15:02:26,456 - mcp.server.lowlevel.server - DEBUG - [server.py:385] - Registering handler for ListToolsRequest
+2025-08-19 15:02:26,456 - mcp.server.lowlevel.server - DEBUG - [server.py:446] - Registering handler for CallToolRequest
+2025-08-19 15:02:26,456 - src.server - INFO - [server.py:88] - MCP Server initialized successfully
+2025-08-19 15:02:26,460 - asyncio - DEBUG - [selector_events.py:64] - Using selector: KqueueSelector
+
+================================================================================
+MCP Server Started: 2025-08-19T15:02:26.462235
+================================================================================
+
+2025-08-19 15:02:26,462 - src.logging_config - INFO - [logging_config.py:113] - MCP Server logging initialized
+2025-08-19 15:02:26,462 - src.logging_config - INFO - [logging_config.py:115] - Log file: logs/mcp_server_20250819_150226.log
+2025-08-19 15:02:26,462 - src.server - INFO - [server.py:79] - Initializing Freqtrade MCP Server
+2025-08-19 15:02:26,462 - src.server - INFO - [server.py:81] - Detailed logs: logs/mcp_server_20250819_150226.log
+2025-08-19 15:02:26,462 - mcp.server.lowlevel.server - DEBUG - [server.py:153] - Initializing server 'freqtrade-mcp'
+2025-08-19 15:02:26,463 - mcp.server.lowlevel.server - DEBUG - [server.py:385] - Registering handler for ListToolsRequest
+2025-08-19 15:02:26,463 - mcp.server.lowlevel.server - DEBUG - [server.py:446] - Registering handler for CallToolRequest
+2025-08-19 15:02:26,463 - src.server - INFO - [server.py:88] - MCP Server initialized successfully
+2025-08-19 15:02:26,538 - tzlocal - DEBUG - [unix.py:120] - /etc/localtime found
+2025-08-19 15:02:26,562 - tzlocal - DEBUG - [unix.py:136] - 1 found:
+ {'/etc/localtime is a symlink to': 'Asia/Kolkata'}
+2025-08-19 15:02:26,564 - src.commands.download_candles - INFO - [download_candles.py:69] - Parsed date range 'last month' to timerange: 20250719-20250819
+2025-08-19 15:02:26,564 - src.commands.download_candles - INFO - [download_candles.py:88] - Using spot trading mode
+2025-08-19 15:02:26,564 - src.commands.base - INFO - [base.py:54] - Downloading 1h data for 1 pairs on binance
+2025-08-19 15:02:26,564 - src.commands.base - WARNING - [base.py:54] - Freqtrade package not available, using CLI mode
+2025-08-19 15:02:26,564 - src.commands.base - INFO - [base.py:54] - Attempting CLI download with freqtrade command
+2025-08-19 15:02:26,564 - src.commands.base - INFO - [base.py:54] - Found freqtrade command at: /Users/dasein/dev/freqtrade/.venv/bin/freqtrade
+2025-08-19 15:02:26,565 - src.commands.base - INFO - [base.py:54] - Running command: freqtrade download-data --exchange binance --timeframes 1h --timerange 20250719-20250819 --pairs BTC/USDT
+2025-08-19 15:02:31,808 - src.commands.base - INFO - [base.py:54] - CLI download completed successfully
+2025-08-19 15:02:31,808 - src.commands.base - WARNING - [base.py:54] - Data file not found: /tmp/test_freqtrade/user_data/data/BTC_USDT-1h.json
+2025-08-19 15:02:31,824 - asyncio - DEBUG - [selector_events.py:64] - Using selector: KqueueSelector
+2025-08-19 15:02:31,828 - urllib3.connectionpool - DEBUG - [connectionpool.py:1049] - Starting new HTTPS connection (1): api.coingecko.com:443
+2025-08-19 15:02:32,234 - urllib3.connectionpool - DEBUG - [connectionpool.py:544] - https://api.coingecko.com:443 "GET /api/v3/coins/markets?order=market_cap_desc&per_page=3&page=1&sparkline=false&vs_currency=usd HTTP/1.1" 200 None
+2025-08-19 15:02:32,236 - src.utils.coingecko - INFO - [coingecko.py:70] - Fetched 3 top coins from CoinGecko
+2025-08-19 15:02:32,237 - src.utils.coingecko - INFO - [coingecko.py:118] - Mapped 2 trading pairs for binance

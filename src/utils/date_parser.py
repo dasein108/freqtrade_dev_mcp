@@ -3,20 +3,101 @@
 from datetime import datetime, timedelta
 from typing import Tuple
 import calendar
+import re
 
 import dateparser
+
+
+def _handle_relative_period(date_string: str) -> Tuple[datetime, datetime]:
+    """Handle relative period patterns like 'last N days/months/years'.
+    
+    Args:
+        date_string: Pattern like "last 365 days", "past 30 days", etc.
+        
+    Returns:
+        Tuple of (start_date, end_date) or None if pattern doesn't match
+    """
+    # Patterns to match: "last/past N days/weeks/months/years"
+    pattern = r'\b(?:last|past)\s+(\d+)\s+(days?|weeks?|months?|years?)\b'
+    match = re.search(pattern, date_string.lower())
+    
+    if not match:
+        return None
+    
+    number = int(match.group(1))
+    unit = match.group(2).rstrip('s')  # Remove plural 's'
+    
+    end_date = datetime.now()
+    
+    if unit == 'day':
+        start_date = end_date - timedelta(days=number)
+    elif unit == 'week':
+        start_date = end_date - timedelta(weeks=number)
+    elif unit == 'month':
+        # Approximate months as 30 days each
+        start_date = end_date - timedelta(days=number * 30)
+    elif unit == 'year':
+        # Approximate years as 365 days each
+        start_date = end_date - timedelta(days=number * 365)
+    else:
+        return None
+    
+    return start_date, end_date
+
+
+def _handle_freqtrade_timerange(date_string: str) -> Tuple[datetime, datetime]:
+    """Handle Freqtrade timerange format YYYYMMDD-YYYYMMDD.
+    
+    Args:
+        date_string: Pattern like "20240101-20250101"
+        
+    Returns:
+        Tuple of (start_date, end_date) or None if pattern doesn't match
+    """
+    import re
+    # Pattern to match YYYYMMDD-YYYYMMDD
+    pattern = r'^(\d{8})-(\d{8})$'
+    match = re.match(pattern, date_string)
+    
+    if not match:
+        return None
+    
+    start_str = match.group(1)
+    end_str = match.group(2)
+    
+    try:
+        # Parse YYYYMMDD format
+        start_date = datetime.strptime(start_str, '%Y%m%d')
+        end_date = datetime.strptime(end_str, '%Y%m%d')
+        
+        # Set end date to end of day
+        end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        return start_date, end_date
+    except ValueError:
+        return None
 
 
 def parse_natural_date(date_string: str) -> Tuple[datetime, datetime]:
     """Parse natural language date string to start and end datetime objects using dateparser.
     
     Args:
-        date_string: Natural language date like "last year", "september", "last 3 months"
+        date_string: Natural language date like "last year", "september", "last 3 months", "last 365 days", or "YYYYMMDD-YYYYMMDD"
         
     Returns:
         Tuple of (start_date, end_date)
     """
     date_string = date_string.strip()
+    
+    # First, check if it's already in Freqtrade timerange format
+    freqtrade_result = _handle_freqtrade_timerange(date_string)
+    if freqtrade_result:
+        return freqtrade_result
+    
+    # Then, try to handle relative period patterns that dateparser might miss
+    relative_result = _handle_relative_period(date_string)
+    if relative_result:
+        return relative_result
     
     # Configure dateparser settings
     settings = {
