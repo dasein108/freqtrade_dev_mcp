@@ -11,7 +11,7 @@ tests/
 │   ├── test_base_models.py        # Pydantic model validation tests
 │   ├── test_base_command.py       # Base command functionality tests
 │   ├── test_download_candles.py   # Download candles command tests
-│   ├── test_read_candles.py       # Read candles command tests  
+│   ├── test_security_guards.py    # Path/name validation, pickle rejection, stdout-clean logging
 │   ├── test_mcp_server.py         # MCP server functionality tests
 │   └── test_mcp_client.py         # MCP client functionality tests
 ├── integration/                   # Integration tests for full workflows
@@ -77,17 +77,16 @@ pytest tests/integration/ -v
 - Tests both package-based and CLI-based download methods
 - Tests error handling and command execution failure scenarios
 
-#### **test_read_candles.py**
-- Tests reading candle data from cache files
-- Tests filename parsing for different pair formats (spot/futures)
-- Tests handling of multiple cache files
-- Tests conversion from freqtrade OHLCV format to structured format
-- Tests file not found and JSON parsing error handling
-- Tests absolute and relative file path handling
+#### **test_security_guards.py**
+- Tests strategy name and result ID validation (path traversal)
+- Tests that file-writing tools stay inside the Freqtrade root and `reset` never deletes non-userdirs
+- Tests that legacy pickle `.fthypt` files are rejected
+- Tests the agent's candle cache file reader
+- Tests that MCP logging never writes to stdout
 
 #### **test_mcp_server.py**
 - Tests MCP server initialization and tool registration
-- Tests download_candles and read_candles tool endpoints
+- Tests download_candles tool endpoint and that read_candles is no longer registered
 - Tests error handling and JSON serialization consistency
 - Tests MCP logging integration
 

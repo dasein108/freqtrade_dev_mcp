@@ -2,20 +2,21 @@
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 try:
-    from .base import BaseCommand, FREQTRADE_AVAILABLE
+    from .base import FREQTRADE_AVAILABLE, BaseCommand
 except ImportError:
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from commands.base import BaseCommand, FREQTRADE_AVAILABLE
+    from commands.base import FREQTRADE_AVAILABLE, BaseCommand
 
 # Import freqtrade modules for package-based functionality
 if FREQTRADE_AVAILABLE:
     try:
-        from freqtrade.configuration import Configuration
+        from freqtrade.configuration import Configuration  # noqa: F401
     except ImportError:
         FREQTRADE_AVAILABLE = False
 
@@ -25,35 +26,33 @@ logger = logging.getLogger(__name__)
 class CreateUserdirCommand(BaseCommand):
     """Command to create a new Freqtrade user directory structure."""
 
-    async def execute(
-        self,
-        userdir: str,
-        reset: bool = False,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def execute(self, userdir: str, reset: bool = False, **kwargs) -> Dict[str, Any]:
         """Execute create userdir command.
-        
+
         Args:
             userdir: Path where to create the user directory
             reset: Reset user directory if it already exists
-            
+
         Returns:
             Command execution result with created directory structure
         """
         try:
             await self.mcp_log("info", f"Creating user directory at: {userdir}")
-            
-            userdir_path = Path(userdir).resolve()
-            
+
+            userdir_path = self.resolve_workspace_path(userdir)
+
+            if reset and userdir_path.exists():
+                self._check_reset_allowed(userdir_path)
+
             # Check if directory exists
             if userdir_path.exists() and not reset:
                 return {
                     "command": "create_userdir",
                     "success": False,
                     "error": f"Directory {userdir_path} already exists. Use reset=True to overwrite.",
-                    "userdir": str(userdir_path)
+                    "userdir": str(userdir_path),
                 }
-            
+
             if FREQTRADE_AVAILABLE:
                 # Use freqtrade package for better integration
                 try:
@@ -61,60 +60,75 @@ class CreateUserdirCommand(BaseCommand):
                     await self.mcp_log("info", "User directory created using freqtrade package")
                     return result
                 except Exception as e:
-                    await self.mcp_log("warning", f"Package-based creation failed, falling back to CLI: {e}")
-            
+                    await self.mcp_log(
+                        "warning", f"Package-based creation failed, falling back to CLI: {e}"
+                    )
+
             # Fallback to CLI mode
             result = await self._create_userdir_using_cli(userdir_path, reset)
             await self.mcp_log("info", "User directory created using CLI")
             return result
-            
+
         except Exception as e:
             await self.mcp_log("error", f"Create userdir command failed: {e}")
             return {
                 "command": "create_userdir",
                 "success": False,
                 "error": str(e),
-                "userdir": userdir
+                "userdir": userdir,
             }
 
+    def _check_reset_allowed(self, userdir_path: Path) -> None:
+        """Refuse to reset anything that is not an existing Freqtrade user directory.
+
+        Raises:
+            ValueError: If the path is the Freqtrade root or lacks a `strategies/` subdirectory.
+        """
+        root = self.config.freqtrade_path.expanduser().resolve()
+        if userdir_path == root:
+            raise ValueError("Refusing to reset the Freqtrade root directory")
+        if not userdir_path.is_dir() or not (userdir_path / "strategies").is_dir():
+            raise ValueError(
+                f"Refusing to reset {userdir_path}: not a Freqtrade user directory "
+                "(missing strategies/ subdirectory)"
+            )
+
     async def _create_userdir_using_package(
-        self, 
-        userdir_path: Path, 
-        reset: bool
+        self, userdir_path: Path, reset: bool
     ) -> Dict[str, Any]:
         """Create userdir using freqtrade package functions."""
         import shutil
-        
+
         # If reset is True and directory exists, remove it
         if reset and userdir_path.exists():
             await self.mcp_log("info", f"Resetting existing directory: {userdir_path}")
             shutil.rmtree(userdir_path)
-        
+
         # Create the directory structure manually based on freqtrade structure
         directories_created = []
         files_created = []
-        
+
         # Create main user directory
         userdir_path.mkdir(parents=True, exist_ok=True)
         directories_created.append(str(userdir_path))
-        
+
         # Create subdirectories
         subdirs = [
             "strategies",
-            "hyperopts", 
+            "hyperopts",
             "data",
             "notebooks",
             "logs",
             "backtest_results",
             "hyperopt_results",
-            "plot"
+            "plot",
         ]
-        
+
         for subdir in subdirs:
             subdir_path = userdir_path / subdir
             subdir_path.mkdir(exist_ok=True)
             directories_created.append(str(subdir_path))
-        
+
         # Create sample files
         sample_files = {
             "strategies/__init__.py": "",
@@ -123,15 +137,17 @@ class CreateUserdirCommand(BaseCommand):
             "notebooks/strategy_analysis.ipynb": self._get_sample_notebook(),
             "config.json": self._get_sample_config(),
         }
-        
+
         for file_path, content in sample_files.items():
             full_path = userdir_path / file_path
             full_path.parent.mkdir(parents=True, exist_ok=True)
             full_path.write_text(content)
             files_created.append(str(full_path))
-        
-        await self.mcp_log("info", f"Created {len(directories_created)} directories and {len(files_created)} files")
-        
+
+        await self.mcp_log(
+            "info", f"Created {len(directories_created)} directories and {len(files_created)} files"
+        )
+
         return {
             "command": "create_userdir",
             "success": True,
@@ -142,31 +158,27 @@ class CreateUserdirCommand(BaseCommand):
             "summary": {
                 "total_directories": len(directories_created),
                 "total_files": len(files_created),
-                "reset_performed": reset and len(directories_created) > 0
-            }
+                "reset_performed": reset and len(directories_created) > 0,
+            },
         }
 
-    async def _create_userdir_using_cli(
-        self, 
-        userdir_path: Path, 
-        reset: bool
-    ) -> Dict[str, Any]:
+    async def _create_userdir_using_cli(self, userdir_path: Path, reset: bool) -> Dict[str, Any]:
         """Create userdir using CLI commands."""
         args = ["create-userdir", "--userdir", str(userdir_path)]
-        
+
         if reset:
             args.append("--reset")
-        
+
         # Execute command
         result = await self.run_freqtrade_command(args)
-        
+
         if result["success"]:
             await self.mcp_log("info", "User directory created successfully via CLI")
-            
+
             # Parse created structure
             directories_created = []
             files_created = []
-            
+
             # Check what was actually created
             if userdir_path.exists():
                 for item in userdir_path.rglob("*"):
@@ -176,7 +188,7 @@ class CreateUserdirCommand(BaseCommand):
                         files_created.append(str(item))
         else:
             await self.mcp_log("error", f"CLI userdir creation failed: {result['stderr']}")
-        
+
         return {
             "command": "create_userdir",
             "success": result["success"],
@@ -189,8 +201,8 @@ class CreateUserdirCommand(BaseCommand):
             "summary": {
                 "total_directories": len(directories_created) if result["success"] else 0,
                 "total_files": len(files_created) if result["success"] else 0,
-                "reset_performed": reset
-            }
+                "reset_performed": reset,
+            },
         }
 
     def _get_sample_strategy(self) -> str:
@@ -209,50 +221,50 @@ class SampleStrategy(IStrategy):
     """
     Sample strategy implementing RSI-based trading logic.
     """
-    
+
     # Strategy interface version
     INTERFACE_VERSION: int = 3
-    
+
     # Optimal timeframe for the strategy
     timeframe = '5m'
-    
+
     # Can this strategy go short?
     can_short: bool = False
-    
+
     # Minimal ROI designed for the strategy
     minimal_roi = {
         "60": 0.01,
         "30": 0.02,
         "0": 0.04
     }
-    
+
     # Optimal stoploss
     stoploss = -0.10
-    
+
     # Trailing stoploss
     trailing_stop = False
-    
+
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         """
         Adds several different TA indicators to the given DataFrame
         """
         # RSI
         dataframe['rsi'] = ta.RSI(dataframe, timeperiod=14)
-        
+
         # MACD
         macd = ta.MACD(dataframe)
         dataframe['macd'] = macd['macd']
         dataframe['macdsignal'] = macd['macdsignal']
         dataframe['macdhist'] = macd['macdhist']
-        
+
         # Bollinger Bands
         bollinger = ta.BBANDS(dataframe, timeperiod=20)
         dataframe['bb_lowerband'] = bollinger['lowerband']
         dataframe['bb_middleband'] = bollinger['middleband']
         dataframe['bb_upperband'] = bollinger['upperband']
-        
+
         return dataframe
-    
+
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         """
         Based on TA indicators, populates the entry signal for the given dataframe
@@ -265,9 +277,9 @@ class SampleStrategy(IStrategy):
                 (dataframe['volume'] > 0)  # Make sure Volume is not 0
             ),
             'enter_long'] = 1
-        
+
         return dataframe
-    
+
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         """
         Based on TA indicators, populates the exit signal for the given dataframe
@@ -280,13 +292,13 @@ class SampleStrategy(IStrategy):
                 (dataframe['volume'] > 0)  # Make sure Volume is not 0
             ),
             'exit_long'] = 1
-        
+
         return dataframe
 '''
 
     def _get_sample_notebook(self) -> str:
         """Get sample Jupyter notebook content."""
-        return '''{
+        return """{
  "cells": [
   {
    "cell_type": "markdown",
@@ -326,11 +338,11 @@ class SampleStrategy(IStrategy):
  },
  "nbformat": 4,
  "nbformat_minor": 4
-}'''
+}"""
 
     def _get_sample_config(self) -> str:
         """Get sample configuration file."""
-        return '''{
+        return """{
     "max_open_trades": 3,
     "stake_currency": "USDT",
     "stake_amount": 100,
@@ -412,4 +424,4 @@ class SampleStrategy(IStrategy):
     "internals": {
         "process_throttle_secs": 5
     }
-}'''
+}"""

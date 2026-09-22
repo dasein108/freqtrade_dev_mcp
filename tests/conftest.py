@@ -1,10 +1,11 @@
 """Pytest configuration and shared fixtures."""
 
-import pytest
 import asyncio
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 
 from src.config import Config
 
@@ -50,7 +51,7 @@ def sample_ohlcv_data():
     return [
         [1704067200000, 50000.0, 50500.0, 49500.0, 50100.0, 1000.0],  # [timestamp, o, h, l, c, v]
         [1704070800000, 50100.0, 50600.0, 49600.0, 50200.0, 1100.0],
-        [1704074400000, 50200.0, 50700.0, 49700.0, 50300.0, 1200.0]
+        [1704074400000, 50200.0, 50700.0, 49700.0, 50300.0, 1200.0],
     ]
 
 
@@ -60,7 +61,7 @@ def sample_cache_files():
     return [
         "BTC_USDT_USDT-1h-20240101-20250101.json",
         "ETH_USDT_USDT-1h-20240101-20250101.json",
-        "BNB_USDT-5m-20240101-20240201.json"
+        "BNB_USDT-5m-20240101-20240201.json",
     ]
 
 
@@ -70,8 +71,8 @@ def sample_pairs():
     return [
         "BTC/USDT:USDT",  # Futures
         "ETH/USDT:USDT",  # Futures
-        "BNB/USDT",       # Spot
-        "ADA/USDT"        # Spot
+        "BNB/USDT",  # Spot
+        "ADA/USDT",  # Spot
     ]
 
 

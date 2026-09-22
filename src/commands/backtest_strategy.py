@@ -1,27 +1,27 @@
 """Backtest strategy command implementation."""
 
-import json
 import logging
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 try:
-    from .base import BaseCommand, FREQTRADE_AVAILABLE
     from ..utils.date_parser import parse_and_format_date
+    from .base import FREQTRADE_AVAILABLE, BaseCommand
 except ImportError:
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from commands.base import BaseCommand, FREQTRADE_AVAILABLE
+    from commands.base import FREQTRADE_AVAILABLE, BaseCommand
     from utils.date_parser import parse_and_format_date
 
 # Import freqtrade modules for package-based functionality
 if FREQTRADE_AVAILABLE:
     try:
+        from freqtrade.configuration import Configuration  # noqa: F401
+        from freqtrade.data.history import get_timerange  # noqa: F401
         from freqtrade.optimize.backtesting import Backtesting
-        from freqtrade.data.history import get_timerange
-        from freqtrade.configuration import Configuration
     except ImportError:
         FREQTRADE_AVAILABLE = False
 
@@ -40,10 +40,10 @@ class BacktestStrategyCommand(BaseCommand):
         enable_protections: bool = False,
         export_trades: bool = True,
         export_signals: bool = True,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Execute backtest strategy command.
-        
+
         Args:
             strategy_name: Name of the strategy to backtest
             pairs: List of trading pairs to test
@@ -52,7 +52,7 @@ class BacktestStrategyCommand(BaseCommand):
             enable_protections: Enable trading protections
             export_trades: Export detailed trade data
             export_signals: Export entry/exit signals
-            
+
         Returns:
             Command execution result with backtest metrics and file paths
         """
@@ -63,7 +63,7 @@ class BacktestStrategyCommand(BaseCommand):
                     "command": "backtest_strategy",
                     "success": False,
                     "error": f"Strategy '{strategy_name}' not found",
-                    "strategy_path": str(self.config.full_strategy_dir / f"{strategy_name}.py")
+                    "strategy_path": str(self.config.full_strategy_dir / f"{strategy_name}.py"),
                 }
 
             # Parse date range
@@ -89,18 +89,24 @@ class BacktestStrategyCommand(BaseCommand):
                 enable_protections=enable_protections,
                 export_trades=export_trades,
                 export_signals=export_signals,
-                result_id=result_id
+                result_id=result_id,
             )
 
             # Execute backtest
             logger.info(f"Running backtest for strategy '{strategy_name}'")
-            
+
             if FREQTRADE_AVAILABLE:
                 # Try package-based backtest first
                 try:
                     backtest_data = await self._run_backtest_using_package(
-                        strategy_name, pairs, parsed_timerange, stake_amount,
-                        enable_protections, export_trades, export_signals, result_id
+                        strategy_name,
+                        pairs,
+                        parsed_timerange,
+                        stake_amount,
+                        enable_protections,
+                        export_trades,
+                        export_signals,
+                        result_id,
                     )
                 except Exception as e:
                     logger.warning(f"Package-based backtest failed, falling back to CLI: {e}")
@@ -115,8 +121,8 @@ class BacktestStrategyCommand(BaseCommand):
                             "details": {
                                 "returncode": result["returncode"],
                                 "stderr": result["stderr"],
-                                "stdout": result["stdout"]
-                            }
+                                "stdout": result["stdout"],
+                            },
                         }
                     backtest_data = self._parse_backtest_output(
                         result["stdout"], strategy_name, pairs, timerange, result_id
@@ -133,8 +139,8 @@ class BacktestStrategyCommand(BaseCommand):
                         "details": {
                             "returncode": result["returncode"],
                             "stderr": result["stderr"],
-                            "stdout": result["stdout"]
-                        }
+                            "stdout": result["stdout"],
+                        },
                     }
                 backtest_data = self._parse_backtest_output(
                     result["stdout"], strategy_name, pairs, timerange, result_id
@@ -155,7 +161,7 @@ class BacktestStrategyCommand(BaseCommand):
                 "command": "backtest_strategy",
                 "strategy": strategy_name,
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
 
     def _build_backtest_args(
@@ -167,14 +173,17 @@ class BacktestStrategyCommand(BaseCommand):
         enable_protections: bool,
         export_trades: bool,
         export_signals: bool,
-        result_id: str
+        result_id: str,
     ) -> List[str]:
         """Build freqtrade backtest command arguments."""
         args = [
             "backtesting",
-            "--strategy", strategy_name,
-            "--timerange", timerange,
-            "--stake-amount", str(stake_amount),
+            "--strategy",
+            strategy_name,
+            "--timerange",
+            timerange,
+            "--stake-amount",
+            str(stake_amount),
         ]
 
         # Add pairs
@@ -206,46 +215,48 @@ class BacktestStrategyCommand(BaseCommand):
         enable_protections: bool,
         export_trades: bool,
         export_signals: bool,
-        result_id: str
+        result_id: str,
     ) -> Dict[str, Any]:
         """Run backtest using freqtrade package functions."""
         import asyncio
-        
+
         # Build configuration for freqtrade
         config = self.get_freqtrade_config()
-        config.update({
-            'strategy': strategy_name,
-            'timerange': timerange,
-            'stake_amount': stake_amount,
-            'enable_protections': enable_protections,
-            'exportfilename': f"backtest_{result_id}",
-            'export': [],
-            'backtest_show_pair_list': True,
-            'datadir': str(self.config.full_data_dir),
-            'user_data_dir': str(self.config.freqtrade_path / "user_data"),
-        })
-        
+        config.update(
+            {
+                "strategy": strategy_name,
+                "timerange": timerange,
+                "stake_amount": stake_amount,
+                "enable_protections": enable_protections,
+                "exportfilename": f"backtest_{result_id}",
+                "export": [],
+                "backtest_show_pair_list": True,
+                "datadir": str(self.config.full_data_dir),
+                "user_data_dir": str(self.config.freqtrade_path / "user_data"),
+            }
+        )
+
         if pairs:
-            config['pairs'] = pairs
-            
+            config["pairs"] = pairs
+
         if export_trades:
-            config['export'].append('trades')
+            config["export"].append("trades")
         if export_signals:
-            config['export'].append('signals')
-            
+            config["export"].append("signals")
+
         # Initialize backtesting engine
         def run_backtest():
             backtesting = Backtesting(config)
             return backtesting.start()
-            
+
         # Run backtest in thread to avoid blocking
         try:
             backtest_stats = await asyncio.to_thread(run_backtest)
-            
+
             # Extract key metrics from backtest stats
-            if backtest_stats and 'strategy' in backtest_stats:
-                strategy_stats = backtest_stats['strategy'][strategy_name]
-                
+            if backtest_stats and "strategy" in backtest_stats:
+                strategy_stats = backtest_stats["strategy"][strategy_name]
+
                 return {
                     "command": "backtest_strategy",
                     "result_id": result_id,
@@ -254,35 +265,31 @@ class BacktestStrategyCommand(BaseCommand):
                     "timerange": timerange,
                     "success": True,
                     "summary": {
-                        "total_profit": strategy_stats.get('profit_total', 0.0),
-                        "win_rate": strategy_stats.get('wins', 0) / max(strategy_stats.get('total_trades', 1), 1),
-                        "max_drawdown": strategy_stats.get('max_drawdown', 0.0),
-                        "total_trades": strategy_stats.get('total_trades', 0),
-                        "profit_factor": strategy_stats.get('profit_factor', 0.0),
-                        "calmar_ratio": strategy_stats.get('calmar', 0.0),
-                        "sharpe_ratio": strategy_stats.get('sharpe', 0.0),
+                        "total_profit": strategy_stats.get("profit_total", 0.0),
+                        "win_rate": strategy_stats.get("wins", 0)
+                        / max(strategy_stats.get("total_trades", 1), 1),
+                        "max_drawdown": strategy_stats.get("max_drawdown", 0.0),
+                        "total_trades": strategy_stats.get("total_trades", 0),
+                        "profit_factor": strategy_stats.get("profit_factor", 0.0),
+                        "calmar_ratio": strategy_stats.get("calmar", 0.0),
+                        "sharpe_ratio": strategy_stats.get("sharpe", 0.0),
                     },
                     "detailed_stats": strategy_stats,
-                    "method": "package"
+                    "method": "package",
                 }
             else:
                 raise ValueError("No backtest results returned")
-                
+
         except Exception as e:
             logger.error(f"Package-based backtest failed: {e}")
             raise
 
     def _parse_backtest_output(
-        self,
-        output: str,
-        strategy_name: str,
-        pairs: List[str],
-        timerange: str,
-        result_id: str
+        self, output: str, strategy_name: str, pairs: List[str], timerange: str, result_id: str
     ) -> Dict[str, Any]:
         """Parse freqtrade backtest output into structured data."""
-        lines = output.split('\n')
-        
+        lines = output.split("\n")
+
         # Initialize result structure
         result = {
             "command": "backtest_strategy",
@@ -292,37 +299,37 @@ class BacktestStrategyCommand(BaseCommand):
             "timerange": timerange,
             "success": True,
             "summary": {},
-            "raw_output": output
+            "raw_output": output,
         }
 
         # Parse key metrics
         for line in lines:
             line = line.strip()
-            
+
             # Total profit
             if "Total profit" in line:
                 match = re.search(r"Total profit\s*[:\|]\s*([-+]?\d*\.?\d+)", line)
                 if match:
                     result["summary"]["total_profit"] = float(match.group(1))
-            
+
             # Win rate
             if "Win  %" in line or "Win rate" in line:
                 match = re.search(r"Win\s*%?\s*[:\|]\s*(\d*\.?\d+)", line)
                 if match:
                     result["summary"]["win_rate"] = float(match.group(1)) / 100.0
-            
+
             # Max drawdown
             if "Max Drawdown" in line:
                 match = re.search(r"Max Drawdown\s*[:\|]\s*([-+]?\d*\.?\d+)", line)
                 if match:
                     result["summary"]["max_drawdown"] = float(match.group(1))
-            
+
             # Total trades
             if "Total trades" in line:
                 match = re.search(r"Total trades\s*[:\|]\s*(\d+)", line)
                 if match:
                     result["summary"]["total_trades"] = int(match.group(1))
-            
+
             # Profit factor
             if "Profit factor" in line:
                 match = re.search(r"Profit factor\s*[:\|]\s*(\d*\.?\d+)", line)
@@ -333,21 +340,18 @@ class BacktestStrategyCommand(BaseCommand):
 
     def _find_export_files(self, result_id: str) -> Dict[str, Optional[str]]:
         """Find exported trade and signal files."""
-        export_files = {
-            "trades_file": None,
-            "signals_file": None
-        }
+        export_files = {"trades_file": None, "signals_file": None}
 
         # Look for exported files in backtest results directory
         results_dir = self.config.full_backtest_results_dir
-        
+
         # Find trades file
         trades_pattern = f"backtest_trades_{result_id}*"
         for trades_file in results_dir.glob(trades_pattern):
             export_files["trades_file"] = str(trades_file)
             break
 
-        # Find signals file  
+        # Find signals file
         signals_pattern = f"backtest_signals_{result_id}*"
         for signals_file in results_dir.glob(signals_pattern):
             export_files["signals_file"] = str(signals_file)

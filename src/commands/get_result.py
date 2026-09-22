@@ -10,6 +10,7 @@ try:
 except ImportError:
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from commands.base import BaseCommand
 
@@ -20,36 +21,33 @@ class GetResultCommand(BaseCommand):
     """Command to retrieve a specific result by ID."""
 
     async def execute(
-        self,
-        result_id: str,
-        include_metadata: bool = True,
-        **kwargs
+        self, result_id: str, include_metadata: bool = True, **kwargs
     ) -> Dict[str, Any]:
         """Execute get result command.
-        
+
         Args:
             result_id: ID of the result to retrieve
             include_metadata: Include metadata in response
-            
+
         Returns:
             Result data with optional metadata
         """
         try:
             # Load the main result data
             result_data = self.load_result(result_id)
-            
+
             if not result_data:
                 return {
                     "command": "get_result",
                     "success": False,
-                    "error": f"Result with ID '{result_id}' not found"
+                    "error": f"Result with ID '{result_id}' not found",
                 }
 
             response = {
                 "command": "get_result",
                 "success": True,
                 "result_id": result_id,
-                "data": result_data
+                "data": result_data,
             }
 
             # Add metadata if requested
@@ -71,7 +69,7 @@ class GetResultCommand(BaseCommand):
                 "command": "get_result",
                 "success": False,
                 "error": str(e),
-                "result_id": result_id
+                "result_id": result_id,
             }
 
     def _load_metadata(self, result_id: str) -> Optional[Dict[str, Any]]:
@@ -107,13 +105,10 @@ class GetResultCommand(BaseCommand):
                 files["trades"] = {
                     "path": str(trades_path),
                     "size": trades_path.stat().st_size,
-                    "exists": True
+                    "exists": True,
                 }
             else:
-                files["trades"] = {
-                    "path": str(trades_path),
-                    "exists": False
-                }
+                files["trades"] = {"path": str(trades_path), "exists": False}
 
         # Check for exported signal files
         if "signals_file" in result_data and result_data["signals_file"]:
@@ -122,13 +117,10 @@ class GetResultCommand(BaseCommand):
                 files["signals"] = {
                     "path": str(signals_path),
                     "size": signals_path.stat().st_size,
-                    "exists": True
+                    "exists": True,
                 }
             else:
-                files["signals"] = {
-                    "path": str(signals_path),
-                    "exists": False
-                }
+                files["signals"] = {"path": str(signals_path), "exists": False}
 
         # Check for hyperopt results file
         if "results_file" in result_data and result_data["results_file"]:
@@ -137,12 +129,9 @@ class GetResultCommand(BaseCommand):
                 files["hyperopt_results"] = {
                     "path": str(results_path),
                     "size": results_path.stat().st_size,
-                    "exists": True
+                    "exists": True,
                 }
             else:
-                files["hyperopt_results"] = {
-                    "path": str(results_path),
-                    "exists": False
-                }
+                files["hyperopt_results"] = {"path": str(results_path), "exists": False}
 
         return files
