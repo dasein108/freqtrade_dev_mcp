@@ -1,8 +1,0 @@
-[2025-08-20 08:43:11] INFO     
-  Logging initialized - Session: 20250820_084311
-[2025-08-20 08:43:11] INFO     
-  Human-readable log: logs/strategy_20250820_084311.log
-[2025-08-20 08:43:11] INFO     
-  Structured log: logs/strategy_20250820_084311.json
-[2025-08-20 08:43:11] INFO     
-  MCP client initialized with server at /Users/dasein/dev/freqtrade/freqtrade_mcp/run_server.py

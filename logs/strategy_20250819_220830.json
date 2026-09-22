@@ -1,3 +1,0 @@
-{"timestamp": "2025-08-19T22:08:30.501156", "level": "INFO", "logger": "strategy_agent", "message": "Logging initialized - Session: 20250819_220830", "module": "logging_config", "function": "setup", "line": 173}
-{"timestamp": "2025-08-19T22:08:30.501298", "level": "INFO", "logger": "strategy_agent", "message": "Human-readable log: logs/strategy_20250819_220830.log", "module": "logging_config", "function": "setup", "line": 174}
-{"timestamp": "2025-08-19T22:08:30.501373", "level": "INFO", "logger": "strategy_agent", "message": "Structured log: logs/strategy_20250819_220830.json", "module": "logging_config", "function": "setup", "line": 175}

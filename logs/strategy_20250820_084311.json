@@ -1,4 +1,0 @@
-{"timestamp": "2025-08-20T08:43:11.028587", "level": "INFO", "logger": "strategy_agent", "message": "Logging initialized - Session: 20250820_084311", "module": "logging_config", "function": "setup", "line": 173}
-{"timestamp": "2025-08-20T08:43:11.028651", "level": "INFO", "logger": "strategy_agent", "message": "Human-readable log: logs/strategy_20250820_084311.log", "module": "logging_config", "function": "setup", "line": 174}
-{"timestamp": "2025-08-20T08:43:11.028683", "level": "INFO", "logger": "strategy_agent", "message": "Structured log: logs/strategy_20250820_084311.json", "module": "logging_config", "function": "setup", "line": 175}
-{"timestamp": "2025-08-20T08:43:11.264008", "level": "INFO", "logger": "strategy_agent.mcp_client", "message": "MCP client initialized with server at /Users/dasein/dev/freqtrade/freqtrade_mcp/run_server.py", "module": "mcp_client", "function": "__init__", "line": 54}

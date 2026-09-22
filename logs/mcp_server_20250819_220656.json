@@ -1,9 +1,0 @@
-{"timestamp": "2025-08-19T22:06:56.347249", "level": "INFO", "logger": "logging_config", "message": "MCP Server logging initialized", "module": "logging_config", "function": "setup_mcp_logging", "line": 113}
-{"timestamp": "2025-08-19T22:06:56.347394", "level": "INFO", "logger": "logging_config", "message": "Log file: logs/mcp_server_20250819_220656.log", "module": "logging_config", "function": "setup_mcp_logging", "line": 115}
-{"timestamp": "2025-08-19T22:06:56.347474", "level": "INFO", "logger": "server", "message": "Initializing Freqtrade MCP Server", "module": "server", "function": "__init__", "line": 81}
-{"timestamp": "2025-08-19T22:06:56.347523", "level": "INFO", "logger": "server", "message": "Detailed logs: logs/mcp_server_20250819_220656.log", "module": "server", "function": "__init__", "line": 83}
-{"timestamp": "2025-08-19T22:06:56.347885", "level": "DEBUG", "logger": "mcp.server.lowlevel.server", "message": "Initializing server 'freqtrade-mcp'", "module": "server", "function": "__init__", "line": 153}
-{"timestamp": "2025-08-19T22:06:56.348132", "level": "DEBUG", "logger": "mcp.server.lowlevel.server", "message": "Registering handler for ListToolsRequest", "module": "server", "function": "decorator", "line": 385}
-{"timestamp": "2025-08-19T22:06:56.348198", "level": "DEBUG", "logger": "mcp.server.lowlevel.server", "message": "Registering handler for CallToolRequest", "module": "server", "function": "decorator", "line": 446}
-{"timestamp": "2025-08-19T22:06:56.348248", "level": "INFO", "logger": "server", "message": "MCP Server initialized successfully", "module": "server", "function": "__init__", "line": 90}
-{"timestamp": "2025-08-19T22:06:56.348499", "level": "DEBUG", "logger": "asyncio", "message": "Using selector: KqueueSelector", "module": "selector_events", "function": "__init__", "line": 64}

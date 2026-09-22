@@ -1,5 +1,0 @@
-{"timestamp": "2025-08-20T08:44:48.392498", "level": "INFO", "logger": "strategy_agent", "message": "Logging initialized - Session: 20250820_084448", "module": "logging_config", "function": "setup", "line": 173}
-{"timestamp": "2025-08-20T08:44:48.392563", "level": "INFO", "logger": "strategy_agent", "message": "Human-readable log: logs/strategy_20250820_084448.log", "module": "logging_config", "function": "setup", "line": 174}
-{"timestamp": "2025-08-20T08:44:48.392595", "level": "INFO", "logger": "strategy_agent", "message": "Structured log: logs/strategy_20250820_084448.json", "module": "logging_config", "function": "setup", "line": 175}
-{"timestamp": "2025-08-20T08:44:48.617989", "level": "INFO", "logger": "strategy_agent.mcp_client", "message": "MCP client initialized with server at /Users/dasein/dev/freqtrade/freqtrade_mcp/run_server.py", "module": "mcp_client", "function": "__init__", "line": 54}
-{"timestamp": "2025-08-20T08:44:48.618506", "level": "INFO", "logger": "strategy_agent.mcp_client", "message": "Detected futures pairs, setting trading_mode=futures", "module": "mcp_client", "function": "download_candles", "line": 259}

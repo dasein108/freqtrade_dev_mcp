@@ -2,7 +2,7 @@
   "mcpServers": {
     "freqtrade": {
       "command": "/FULL/PATH/TO/python",
-      "args": ["/ABSOLUTE/PATH/TO/freqtrade_mcp/src/server.py"],
+      "args": ["/ABSOLUTE/PATH/TO/freqtrade_dev_mcp/run_server.py"],
       "env": {
         "FREQTRADE_MCP_PATH": "/ABSOLUTE/PATH/TO/your/freqtrade",
         "FREQTRADE_MCP_COINGECKO_KEY": "your_coingecko_api_key",
